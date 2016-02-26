@@ -1,0 +1,272 @@
+
+Allocating common symbols
+Common symbol       size              file
+
+task_stack          0x400             ./src/ulwos.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+VEC              0x00000000         0x00000004
+IVEC             0x00000004         0x000000bc
+OPT              0x000000c0         0x00000004
+SEC_ID           0x000000c4         0x0000000a
+OCDSTAD          0x000000ce         0x0000000a
+OCDROM           0x0000fe00         0x00000200
+ROM              0x000000d8         0x0000fd28
+MIRROR           0x000f2000         0x0000ceff
+RAM              0x000fef00         0x00000fff
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.vec            0x00000000        0x4
+ *(.vec)
+ .vec           0x00000000        0x4 ./src/vector_table.o
+                0x00000000                HardwareVectors
+
+.vects          0x00000004       0x7c
+ *(.vects)
+ .vects         0x00000004       0x7c ./src/vector_table.o
+                0x00000004                Vectors
+
+.option_bytes   0x000000c0        0x4
+ *(.option_bytes)
+ .option_bytes  0x000000c0        0x4 ./src/vector_table.o
+                0x000000c0                Option_Bytes
+
+.security_id    0x000000c4        0xa
+ *(.security_id)
+ .security_id   0x000000c4        0xa ./src/vector_table.o
+                0x000000c4                Security_Id
+
+.lowtext        0x000000d8        0x0
+ *(.plt)
+ .plt           0x000000d8        0x0 ./src/main.o
+ *(.lowtext)
+                0x000000d8                . = ALIGN (0x2)
+
+.tors           0x000000d8        0x0
+                0x000000d8                __CTOR_LIST__ = .
+                0x000000d8                . = ALIGN (0x2)
+                0x000000d8                ___ctors = .
+ *(.ctors)
+                0x000000d8                ___ctors_end = .
+                0x000000d8                __CTOR_END__ = .
+                0x000000d8                __DTOR_LIST__ = .
+                0x000000d8                ___dtors = .
+ *(.dtors)
+                0x000000d8                ___dtors_end = .
+                0x000000d8                __DTOR_END__ = .
+                0x000000d8                _mdata = .
+
+.text           0x000000d8      0x450
+ *(.text)
+ .text          0x000000d8        0x1 ./src/hardware_setup.o
+                0x000000d8                HardwareSetup
+ .text          0x000000d9      0x1e0 ./src/interrupt_handlers.o
+                0x000000d9                INT_WDTI
+                0x000000e5                INT_LVI
+                0x000000f1                INT_P0
+                0x000000fd                INT_P1
+                0x00000109                INT_P2
+                0x00000115                INT_P3
+                0x00000121                INT_P4
+                0x0000012d                INT_P5
+                0x00000139                INT_ST2
+                0x00000145                INT_SR2
+                0x00000151                INT_SRE2
+                0x0000015d                INT_DMA0
+                0x00000169                INT_DMA1
+                0x00000175                INT_ST0
+                0x00000181                INT_SR0
+                0x0000018d                INT_TM01H
+                0x00000199                INT_ST1
+                0x000001a5                INT_SR1
+                0x000001b1                INT_TM03H
+                0x000001bd                INT_IICA0
+                0x000001c9                INT_TM00
+                0x000001d5                INT_TM01
+                0x000001e1                INT_TM02
+                0x000001ed                INT_TM03
+                0x000001f9                INT_AD
+                0x00000205                INT_RTC
+                0x00000211                INT_KR
+                0x0000021d                INT_TM04
+                0x00000229                INT_TM05
+                0x00000235                INT_TM06
+                0x00000241                INT_TM07
+                0x0000024d                INT_P6
+                0x00000259                INT_P7
+                0x00000265                INT_P8
+                0x00000271                INT_P9
+                0x0000027d                INT_P10
+                0x00000289                INT_P11
+                0x00000295                INT_MD
+                0x000002a1                INT_FL
+                0x000002ad                INT_BRK_I
+ .text          0x000002b9       0x94 ./src/main.o
+                0x000002b9                task1
+                0x00000303                task2
+ .text          0x0000034d       0x60 ./src/reset_program.o
+                0x0000034f                PowerON_Reset
+ .text          0x000003ad      0x153 ./src/ulwos.o
+                0x000003ad                save_context
+                0x000003de                restore_context
+                0x0000040d                ulwos_create_task
+                0x0000045e                ulwos_start
+                0x0000047e                INT_IT
+ .text          0x00000500        0x0 ./src/vector_table.o
+ *(.text.*)
+ .text.startup  0x00000500       0x28 ./src/main.o
+                0x00000500                main
+                0x00000528                etext = .
+                0x00000528                . = ALIGN (0x2)
+                0x00000000                PROVIDE (__rl78_abs__, 0x0)
+
+.init
+ *(.init)
+
+.fini
+ *(.fini)
+
+.got
+ *(.got)
+ *(.got.plt)
+
+.rodata         0x00002000        0x0
+                0x00002000                . = ALIGN (0x2)
+ *(.rodata)
+ *(.rodata.*)
+                0x00002000                _erodata = .
+
+.frodata
+
+.eh_frame_hdr
+ *(.eh_frame_hdr)
+
+.eh_frame
+ *(.eh_frame)
+
+.jcr            0x00000528        0x0
+ *(.jcr)
+                0x00000528                . = ALIGN (0x2)
+
+.data           0x000fef00        0x0 load address 0x000000d8
+                0x000fef00                . = ALIGN (0x2)
+                0x000fef00                _data = .
+ *(.data)
+ .data          0x000fef00        0x0 ./src/hardware_setup.o
+ .data          0x000fef00        0x0 ./src/interrupt_handlers.o
+ .data          0x000fef00        0x0 ./src/main.o
+ .data          0x000fef00        0x0 ./src/reset_program.o
+ .data          0x000fef00        0x0 ./src/ulwos.o
+ .data          0x000fef00        0x0 ./src/vector_table.o
+ *(.data.*)
+                0x000fef00                . = ALIGN (0x2)
+                0x000fef00                _edata = .
+                0x00000000                PROVIDE (__romdatacopysize, SIZEOF (.data))
+
+.bss            0x000fef00      0x594 load address 0x000000d8
+                0x000fef00                . = ALIGN (0x2)
+                0x000fef00                _bss = .
+ *(.bss)
+ .bss           0x000fef00        0x0 ./src/hardware_setup.o
+ .bss           0x000fef00        0x0 ./src/interrupt_handlers.o
+ .bss           0x000fef00        0x0 ./src/main.o
+ .bss           0x000fef00        0x0 ./src/reset_program.o
+ .bss           0x000fef00      0x194 ./src/ulwos.o
+ .bss           0x000ff094        0x0 ./src/vector_table.o
+ *(.bss.**)
+                0x000ff094                . = ALIGN (0x2)
+ *(COMMON)
+ COMMON         0x000ff094      0x400 ./src/ulwos.o
+                0x000ff094                task_stack
+                0x000ff494                . = ALIGN (0x2)
+                0x000ff494                _ebss = .
+                0x000ff494                _end = .
+                0x00000064                PROVIDE (stack_size, 0x64)
+
+.stack          0x000ffedc        0x0
+                0x000ffedc                _stack = .
+                0x00000001                ASSERT ((_stack > (_end + stack_size)), Error: Too much data - no room left for the stack)
+LOAD ./src/hardware_setup.o
+LOAD ./src/interrupt_handlers.o
+LOAD ./src/main.o
+LOAD ./src/reset_program.o
+LOAD ./src/ulwos.o
+LOAD ./src/vector_table.o
+LOAD libULWOS_dual_led.a
+START GROUP
+LOAD C:\Users\Fabio\e2_studio\workspace\ULWOS_dual_led\Debug\libULWOS_dual_led.a
+LOAD C:\PROGRA~2\KPIT\GNURL7~1.02-\rl78-elf/lib/gcc/rl78-elf/4.9-GNURL78_v15.02/g13\libgcc.a
+LOAD C:\PROGRA~2\KPIT\GNURL7~1.02-\rl78-elf/rl78-elf/lib/g13\libsim.a
+END GROUP
+OUTPUT(ULWOS_dual_led.x elf32-rl78)
+
+.debug_frame    0x00000000      0x7d8
+ .debug_frame   0x00000000       0x24 ./src/hardware_setup.o
+ .debug_frame   0x00000024      0x6f4 ./src/interrupt_handlers.o
+ .debug_frame   0x00000718       0x5c ./src/main.o
+ .debug_frame   0x00000774       0x64 ./src/ulwos.o
+
+.debug_info     0x00000000      0x8e3
+ .debug_info    0x00000000       0x37 ./src/hardware_setup.o
+ .debug_info    0x00000037      0x2ce ./src/interrupt_handlers.o
+ .debug_info    0x00000305      0x216 ./src/main.o
+ .debug_info    0x0000051b       0x7a ./src/reset_program.o
+ .debug_info    0x00000595      0x28d ./src/ulwos.o
+ .debug_info    0x00000822       0xc1 ./src/vector_table.o
+
+.debug_abbrev   0x00000000      0x347
+ .debug_abbrev  0x00000000       0x2c ./src/hardware_setup.o
+ .debug_abbrev  0x0000002c       0x2c ./src/interrupt_handlers.o
+ .debug_abbrev  0x00000058      0x11b ./src/main.o
+ .debug_abbrev  0x00000173       0x14 ./src/reset_program.o
+ .debug_abbrev  0x00000187      0x16d ./src/ulwos.o
+ .debug_abbrev  0x000002f4       0x53 ./src/vector_table.o
+
+.debug_aranges  0x00000000       0xc0
+ .debug_aranges
+                0x00000000       0x20 ./src/hardware_setup.o
+ .debug_aranges
+                0x00000020       0x20 ./src/interrupt_handlers.o
+ .debug_aranges
+                0x00000040       0x28 ./src/main.o
+ .debug_aranges
+                0x00000068       0x20 ./src/reset_program.o
+ .debug_aranges
+                0x00000088       0x20 ./src/ulwos.o
+ .debug_aranges
+                0x000000a8       0x18 ./src/vector_table.o
+
+.debug_line     0x00000000      0x6d0
+ .debug_line    0x00000000       0x4e ./src/hardware_setup.o
+ .debug_line    0x0000004e      0x226 ./src/interrupt_handlers.o
+ .debug_line    0x00000274       0xfa ./src/main.o
+ .debug_line    0x0000036e      0x15d ./src/reset_program.o
+ .debug_line    0x000004cb      0x1cf ./src/ulwos.o
+ .debug_line    0x0000069a       0x36 ./src/vector_table.o
+
+.debug_str      0x00000000      0x3e3
+ .debug_str     0x00000000      0x121 ./src/hardware_setup.o
+ .debug_str     0x00000121      0x162 ./src/interrupt_handlers.o
+                                0x25d (size before relaxing)
+ .debug_str     0x00000283       0x8b ./src/main.o
+                                0x192 (size before relaxing)
+ .debug_str     0x0000030e       0x96 ./src/ulwos.o
+                                0x212 (size before relaxing)
+ .debug_str     0x000003a4       0x3f ./src/vector_table.o
+                                0x159 (size before relaxing)
+
+.comment        0x00000000       0x94
+ .comment       0x00000000       0x94 ./src/hardware_setup.o
+                                 0x95 (size before relaxing)
+ .comment       0x00000000       0x95 ./src/interrupt_handlers.o
+ .comment       0x00000000       0x95 ./src/main.o
+ .comment       0x00000000       0x95 ./src/ulwos.o
+ .comment       0x00000000       0x95 ./src/vector_table.o
+
+.debug_ranges   0x00000000       0x18
+ .debug_ranges  0x00000000       0x18 ./src/main.o

@@ -1,0 +1,1 @@
+"./src/hardware_setup.o" "./src/interrupt_handlers.o" "./src/main.o" "./src/reset_program.o" "./src/ulwos.o" "./src/vector_table.o" 
