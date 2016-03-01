@@ -1,5 +1,5 @@
 /*
- * ULWOS - Ultra Light Weight Operating System
+ * ULWOS - Ultra Lightweight Operating System
  *
  * ULWOS is not a real operating system but a pre-emptive task switcher. It was designed to
  * demonstrate the basics of a multi-tasking system with minimum memory footprint.
@@ -17,7 +17,7 @@
 #include "ulwos.h"
 
 static unsigned volatile int tempSP;
-static unsigned volatile int task_context[ULWOS_NUM_TASKS][24];
+static unsigned volatile int task_context[ULWOS_NUM_TASKS][12];
 static unsigned volatile int taskSP[ULWOS_NUM_TASKS];
 static volatile ULWOS_TASKHANDLER current_task=0;
 static volatile char num_tasks=0;
@@ -62,8 +62,7 @@ void inline restore_context(void){
 		// now we set the pointer to the context stack, so we can save current context
 		"mov A,#24\n\t"		// A = 24
 		"mov X,%0\n\t"		// X = current_task
-		"inc X\n\t"			// X = current_task+1 (so we to the top of the context stack)
-		"mulu X\n\t"		// AX = 24 * (current_task+1)
+		"mulu X\n\t"		// AX = 24 * (current_task)
 		"addw AX,%1\n\t"	// AX = address of task_context[current_task]
 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
 		:
@@ -77,6 +76,7 @@ void inline restore_context(void){
 	asm ("sel RB2");
 	restore_regs();		// restore regs from bank 2
 	asm volatile (
+		"sel RB3\n\t"
 		"mov X,%0\n\t"		// X = current_task
 		"clrb A\n\t"		// A = 0 (AX = current_task)
 		"shlw AX,1\n\t"		// AX = current_task*2
@@ -145,6 +145,7 @@ void inline ulwos_start(void){
 		"movw SP,AX\n\t"	// SP = AX = taskSP[0]
 		// this is a fake return from interrupt, it restores the PSW and PC from the stack
 		"reti\n\t"
+		"nop\n\t"
 		:
 		:"m"(taskSP)
 	);
