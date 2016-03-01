@@ -4,7 +4,7 @@
  * ULWOS is not a real operating system but a pre-emptive task switcher. It was designed to
  * demonstrate the basics of a multi-tasking system with minimum memory footprint.
  *
- * The following code makes heavy use of assembly language!!! The code is compatible with GCC compiler only!
+ * The following code makes heavy use of assembly language!!!The code is compatible with GCC compiler only!
  *
  * Copyright: Fábio Pereira 2016
  *
