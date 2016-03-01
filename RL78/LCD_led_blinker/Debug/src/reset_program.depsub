@@ -1,0 +1,1 @@
+ -Wa,-gdwarf2 -x assembler-with-cpp   -nostdinc -ftree-loop-distribute-patterns -I"C:\\PROGRA~2\\KPIT\\GNURL7~1.02-\\rl78-elf/rl78-elf/optlibinc" -Wstack-usage=64 -mg13 -O2 -g2 -g -mmul=g13 
