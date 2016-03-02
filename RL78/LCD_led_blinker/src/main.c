@@ -26,16 +26,14 @@
 #define LED 	P6_bit.no3
 #define LED_DIR PM6_bit.no3
 
-volatile unsigned long counter;
-
 void task1(void){
 	volatile unsigned long count;
 	LED_DIR = 0;
 	while (1){
 		LED = 0;
-		for (count=0; count<100000;count++) counter=count;
+		for (count=0; count<100000;count++);
 		LED = 1;
-		for (count=0; count<100000;count++) counter=count;
+		for (count=0; count<100000;count++);
 	}
 }
 

@@ -4,10 +4,11 @@
  * ULWOS is not a real operating system but a pre-emptive task switcher. It was designed to
  * demonstrate the basics of a multi-tasking system with minimum memory footprint.
  *
- * The following code makes heavy use of assembly language!!!The code is compatible with GCC compiler only!
+ * The following code makes heavy use of assembly language!!!
+ * The code is compatible with GCC compiler only!
  *
  * Copyright: Fábio Pereira 2016
- *
+ * fabio.jve@gmail.com
  */
 
 #include "iodefine.h"
@@ -16,12 +17,12 @@
 #include "interrupt_handlers.h"
 #include "ulwos.h"
 
-static unsigned volatile int tempSP;
-static unsigned volatile int task_context[ULWOS_NUM_TASKS][12];
-static unsigned volatile int taskSP[ULWOS_NUM_TASKS];
-static volatile ULWOS_TASKHANDLER current_task=0;
-static volatile char num_tasks=0;
-volatile char task_stack[ULWOS_NUM_TASKS][ULWOS_TASK_STACK_SIZE];
+static unsigned volatile int ulwos_tempSP;
+static unsigned volatile int ulwos_task_context[ULWOS_NUM_TASKS][12];
+static unsigned volatile int ulwos_taskSP[ULWOS_NUM_TASKS];
+static volatile ULWOS_TASKHANDLER ulwos_current_task=0;
+static volatile char ulwos_num_tasks=0;
+volatile char ulwos_task_stack[ULWOS_NUM_TASKS][ULWOS_TASK_STACK_SIZE];
 
 #define save_regs()	asm volatile ("push AX\n\tpush BC\n\tpush DE\n\tpush HL\n\t")
 #define restore_regs() asm volatile ("pop HL\n\tpop DE\n\tpop BC\n\tpop AX\n\t")
@@ -45,7 +46,7 @@ void inline save_context(void){
 		"addw AX,%1\n\t"	// AX = address of task_context[current_task]
 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
 		:
-		:"m"(current_task),"i"(task_context),"i"(taskSP)
+		:"m"(ulwos_current_task),"i"(ulwos_task_context),"i"(ulwos_taskSP)
 	);
 	// now we save registers from banks 2,1 and 0 into the context stack
 	asm ("sel RB2");
@@ -66,7 +67,7 @@ void inline restore_context(void){
 		"addw AX,%1\n\t"	// AX = address of task_context[current_task]
 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
 		:
-		:"m"(current_task),"i"(task_context)
+		:"m"(ulwos_current_task),"i"(ulwos_task_context)
 	);
 	// now we restore registers from banks 0,1 and 2 from the stack
 	asm ("sel RB0");
@@ -87,22 +88,32 @@ void inline restore_context(void){
 		"movw SP,AX\n\t"	// set the SP for the current task
 		"reti\n\t"			// return from this interrupt (change the context)
 		:
-		:"m"(current_task),"i"(taskSP)
+		:"m"(ulwos_current_task),"i"(ulwos_taskSP)
 	);
 }
 
 ULWOS_TASKHANDLER ulwos_create_task(void * task_address){
-	if (num_tasks>=ULWOS_NUM_TASKS) return -1;
-	tempSP = (int) task_address;
-	current_task = num_tasks;
-	num_tasks++;
+	if (ulwos_num_tasks>=ULWOS_NUM_TASKS) return -1;
+	ulwos_tempSP = (int) task_address;
+	ulwos_current_task = ulwos_num_tasks;
+	ulwos_num_tasks++;
 	asm volatile (
 		"sel RB3\n\t"
 		"movw HL,SP\n\t"	// HL has the old SP
-		"mov A,%0\n\t"		// A = ULWOS_TASK_STACK_SIZE
-		"mov X,%1\n\t"		// X = current_task
-		"inc X\n\t"			// X = current_task+1 (so we can calculate the top of the current stack)
-		"mulu X\n\t"		// AX = ULWOS_TASK_STACK_SIZE * (current_task+1)
+		"clrw AX\n\t"		// AX = 0
+		"movw DE,%0\n\t"	// DE = ULWOS_TASK_STACK_SIZE
+		"clrb B\n\t"
+		"mov C,%1\n\t"		// BC = current_task
+		"inc C\n\t"
+		// this is a simple 16-bit multiply
+		"LOOP:"
+		"addw AX,DE\n\t"	// AX = AX + ULWOS_TASK_STACK_SIZE
+		"decw BC\n\t"		// BC = BC-1
+		"cmp0 B\n\t"		// compares B with 0
+		"bnz $LOOP\n\t"		// branch to loop if not zero
+		"cmp0 C\n\t"		// compares C with 0
+		"bnz $LOOP\n\t"		// branch to loop if not zero
+		// AX = ULWOS_TASK_STACK_SIZE * (current_task+1)
 		"movw BC,AX\n\t"
 		"movw AX,%2\n\t"
 		"addw AX,BC\n\t"	// AX = pointer to task_stack[current_stack]
@@ -113,7 +124,7 @@ ULWOS_TASKHANDLER ulwos_create_task(void * task_address){
 		"movw AX,%3\n\t"	// AX = task function address (stored in tempSP)
 		"push AX\n\t"		// save the function address onto stack
 		:
-		:"i"(ULWOS_TASK_STACK_SIZE),"m"(current_task),"i"(task_stack),"m"(tempSP)
+		:"i"(ULWOS_TASK_STACK_SIZE),"m"(ulwos_current_task),"i"(ulwos_task_stack),"m"(ulwos_tempSP)
 	);
 	asm volatile (
 		"mov X,%1\n\t"		// X = current_task
@@ -128,13 +139,13 @@ ULWOS_TASKHANDLER ulwos_create_task(void * task_address){
 		"movw SP,AX\n\t"	// restore the old SP
 		"sel RB0\n\t"
 		:
-		:"i"(taskSP),"m"(current_task)
+		:"i"(ulwos_taskSP),"m"(ulwos_current_task)
 	);
-	return current_task;
+	return ulwos_current_task;
 }
 
 void inline ulwos_start(void){
-	current_task = 0;
+	ulwos_current_task = 0;
 	OSMC = bWUTMMCK0;		// set LOCO (15kHz) as the IT/RTC clock source
 	RTCEN = 1;				// enables the RTC and IT
 	ITMC = bRINTE | 14;		// IT enabled, interval = 1ms
@@ -147,13 +158,13 @@ void inline ulwos_start(void){
 		"reti\n\t"
 		"nop\n\t"
 		:
-		:"m"(taskSP)
+		:"m"(ulwos_taskSP)
 	);
 }
 
 void __attribute__ ((naked)) INT_IT(void) {
 	save_context();
-	current_task++;
-	if (current_task>=num_tasks) current_task=0;
+	ulwos_current_task++;
+	if (ulwos_current_task>=ulwos_num_tasks) ulwos_current_task=0;
 	restore_context();
 }
