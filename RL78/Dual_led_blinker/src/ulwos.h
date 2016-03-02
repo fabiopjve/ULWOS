@@ -1,5 +1,5 @@
 /*
- * ULWOS - Ultra Light Weight Operating System
+ * ULWOS - Ultra Lightweight Operating System
  * Author: Fábio Pereira fabio@sctec.com.br or fabio.jve@gmail.com
  *
  * RL78 Port in 02/26/2016
@@ -11,10 +11,18 @@
 #include "interrupt_handlers.h"
 
 // the following line defines the stack size for each task
-#define ULWOS_TASK_STACK_SIZE	128
+#ifndef ULWOS_TASK_STACK_SIZE
+
+#define ULWOS_TASK_STACK_SIZE	256
+
+#endif
 
 // the following line defines the maximum number of tasks
+#ifndef ULWOS_NUM_TASKS
+
 #define ULWOS_NUM_TASKS			8
+
+#endif
 
 // the handler for each ULWOS task
 typedef signed char ULWOS_TASKHANDLER;
