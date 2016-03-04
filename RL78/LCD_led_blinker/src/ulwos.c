@@ -1,14 +1,19 @@
 /*
  * ULWOS - Ultra Lightweight Operating System
  *
- * ULWOS is not a real operating system but a pre-emptive task switcher. It was designed to
- * demonstrate the basics of a multi-tasking system with minimum memory footprint.
+ * ULWOS is not a real operating system but a preemptive task switcher. It was designed to
+ * demonstrate the basics of a multitasking system with minimum memory footprint.
  *
  * The following code makes heavy use of assembly language!!!
  * The code is compatible with GCC compiler only!
  *
- * Copyright: Fábio Pereira 2016
+ * Author: Fábio Pereira
  * fabio.jve@gmail.com
+ *
+ * RL78 Port on 02/26/2016
+ *
+ * This work is licensed under the Creative Commons Attribution 4.0 International License.
+ * To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
  */
 
 #include "iodefine.h"
