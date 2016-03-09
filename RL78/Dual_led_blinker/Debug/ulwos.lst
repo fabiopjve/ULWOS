@@ -29,559 +29,584 @@
   30                             	.LFB0:
   31                             		.file 1 "../src/ulwos.c"
    1:../src/ulwos.c **** /*
-   2:../src/ulwos.c ****  * ULWOS - Ultra Light Weight Operating System
+   2:../src/ulwos.c ****  * ULWOS - Ultra Lightweight Operating System
    3:../src/ulwos.c ****  *
-   4:../src/ulwos.c ****  * ULWOS is not a real operating system but a pre-emptive task switcher. It was designed to
-   5:../src/ulwos.c ****  * demonstrate the basics of a multi-tasking system with minimum memory footprint.
+   4:../src/ulwos.c ****  * ULWOS is not a real operating system but a preemptive task switcher. It was designed to
+   5:../src/ulwos.c ****  * demonstrate the basics of a multitasking system with minimum memory footprint.
    6:../src/ulwos.c ****  *
-   7:../src/ulwos.c ****  * The following code makes heavy use of assembly language!!!The code is compatible with GCC compil
-   8:../src/ulwos.c ****  *
-   9:../src/ulwos.c ****  * Copyright: Fábio Pereira 2016
-  10:../src/ulwos.c ****  *
-  11:../src/ulwos.c ****  */
-  12:../src/ulwos.c **** 
-  13:../src/ulwos.c **** #include "iodefine.h"
-  14:../src/ulwos.c **** #include "iodefine_ext.h"
-  15:../src/ulwos.c **** #include "myrl78.h"
-  16:../src/ulwos.c **** #include "interrupt_handlers.h"
-  17:../src/ulwos.c **** #include "ulwos.h"
+   7:../src/ulwos.c ****  * The following code makes heavy use of assembly language!!!
+   8:../src/ulwos.c ****  * The code is compatible with GCC compiler only!
+   9:../src/ulwos.c ****  *
+  10:../src/ulwos.c ****  * Author: Fábio Pereira
+  11:../src/ulwos.c ****  * fabio.jve@gmail.com
+  12:../src/ulwos.c ****  *
+  13:../src/ulwos.c ****  * RL78 Port on 02/26/2016
+  14:../src/ulwos.c ****  *
+  15:../src/ulwos.c ****  * This work is licensed under the Creative Commons Attribution 4.0 International License.
+  16:../src/ulwos.c ****  * To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
+  17:../src/ulwos.c ****  */
   18:../src/ulwos.c **** 
-  19:../src/ulwos.c **** static unsigned volatile int tempSP;
-  20:../src/ulwos.c **** static unsigned volatile int task_context[ULWOS_NUM_TASKS][24];
-  21:../src/ulwos.c **** static unsigned volatile int taskSP[ULWOS_NUM_TASKS];
-  22:../src/ulwos.c **** static volatile ULWOS_TASKHANDLER current_task=0;
-  23:../src/ulwos.c **** static volatile char num_tasks=0;
-  24:../src/ulwos.c **** volatile char task_stack[ULWOS_NUM_TASKS][ULWOS_TASK_STACK_SIZE];
-  25:../src/ulwos.c **** 
-  26:../src/ulwos.c **** #define save_regs()	asm volatile ("push AX\n\tpush BC\n\tpush DE\n\tpush HL\n\t")
-  27:../src/ulwos.c **** #define restore_regs() asm volatile ("pop HL\n\tpop DE\n\tpop BC\n\tpop AX\n\t")
-  28:../src/ulwos.c **** 
-  29:../src/ulwos.c **** void inline save_context(void){
-  32                             		.loc 1 29 0
-  30:../src/ulwos.c **** 	asm volatile (
-  33                             		.loc 1 30 0
-  34                             	 ; 30 "../src/ulwos.c" 1
+  19:../src/ulwos.c **** #include "iodefine.h"
+  20:../src/ulwos.c **** #include "iodefine_ext.h"
+  21:../src/ulwos.c **** #include "myrl78.h"
+  22:../src/ulwos.c **** #include "interrupt_handlers.h"
+  23:../src/ulwos.c **** #include "ulwos.h"
+  24:../src/ulwos.c **** 
+  25:../src/ulwos.c **** static unsigned volatile int ulwos_tempSP;
+  26:../src/ulwos.c **** static unsigned volatile int ulwos_task_context[ULWOS_NUM_TASKS][12];
+  27:../src/ulwos.c **** static unsigned volatile int ulwos_taskSP[ULWOS_NUM_TASKS];
+  28:../src/ulwos.c **** static volatile ULWOS_TASKHANDLER ulwos_current_task=0;
+  29:../src/ulwos.c **** static volatile char ulwos_num_tasks=0;
+  30:../src/ulwos.c **** volatile char ulwos_task_stack[ULWOS_NUM_TASKS][ULWOS_TASK_STACK_SIZE];
+  31:../src/ulwos.c **** 
+  32:../src/ulwos.c **** #define save_regs()	asm ("push AX\n\tpush BC\n\tpush DE\n\tpush HL\n\t")
+  33:../src/ulwos.c **** #define restore_regs() asm ("pop HL\n\tpop DE\n\tpop BC\n\tpop AX\n\t")
+  34:../src/ulwos.c **** 
+  35:../src/ulwos.c **** void inline save_context(void){
+  32                             		.loc 1 35 0
+  36:../src/ulwos.c **** 	asm volatile (
+  33                             		.loc 1 36 0
+  34                             	 ; 36 "../src/ulwos.c" 1
   35 0000 61 FF                   		sel RB3
-  36 0002 D9 01 00                		mov X,!_current_task
+  36 0002 D9 01 00                		mov X,!_ulwos_current_task
   37 0005 F1                      		clrb A
   38 0006 31 1D                   		shlw AX,1
-  39 0008 32 02 00                		movw BC,#_taskSP
+  39 0008 32 02 00                		movw BC,#_ulwos_taskSP
   40 000b 03                      		addw AX,BC
   41 000c 14                      		movw DE,AX
   42 000d AE F8                   		movw AX,SP
   43 000f B9                      		movw [DE],AX
   44 0010 51 18                   		mov A,#24
-  45 0012 D9 01 00                		mov X,!_current_task
+  45 0012 D9 01 00                		mov X,!_ulwos_current_task
   46 0015 80                      		inc X
   47 0016 D6                      		mulu X
-  48 0017 04 12 00                		addw AX,#_task_context
+  48 0017 04 0A 00                		addw AX,#_ulwos_task_context
   49 001a BE F8                   		movw SP,AX
   50                             		
   51                             	 ; 0 "" 2
-  31:../src/ulwos.c **** 		"sel RB3\n\t"		// We are going to use bank3 as it is reserved for isr code
-  32:../src/ulwos.c **** 		"mov X,%0\n\t"		// X = current_task
-  33:../src/ulwos.c **** 		"clrb A\n\t"		// A = 0 (AX = current_task)
-  34:../src/ulwos.c **** 		"shlw AX,1\n\t"		// AX = current_task*2
-  35:../src/ulwos.c **** 		"movw BC,%2\n\t"	// BC = taskSP
-  36:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = taskSP+(current_task*2) => taskSP[current_task]
-  37:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE = taskSP[current_task]
-  38:../src/ulwos.c **** 		"movw AX,SP\n\t"	// AX = task's SP
-  39:../src/ulwos.c **** 		"movw [DE],AX\n\t"	// task_SP[current_task] = task's SP
-  40:../src/ulwos.c **** 		// now we set the pointer to the context stack, so we can save current context
-  41:../src/ulwos.c **** 		"mov A,#24\n\t"		// A = 24
-  42:../src/ulwos.c **** 		"mov X,%0\n\t"		// X = current_task
-  43:../src/ulwos.c **** 		"inc X\n\t"			// X = current_task+1 (so we to the top of the context stack)
-  44:../src/ulwos.c **** 		"mulu X\n\t"		// AX = 24 * (current_task+1)
-  45:../src/ulwos.c **** 		"addw AX,%1\n\t"	// AX = address of task_context[current_task]
-  46:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
-  47:../src/ulwos.c **** 		:
-  48:../src/ulwos.c **** 		:"m"(current_task),"i"(task_context),"i"(taskSP)
-  49:../src/ulwos.c **** 	);
-  50:../src/ulwos.c **** 	// now we save registers from banks 2,1 and 0 into the context stack
-  51:../src/ulwos.c **** 	asm ("sel RB2");
-  52                             		.loc 1 51 0
-  53                             	 ; 51 "../src/ulwos.c" 1
+  37:../src/ulwos.c **** 		"sel RB3\n\t"		// We are going to use bank3 as it is reserved for isr code
+  38:../src/ulwos.c **** 		"mov X,%[ct]\n\t"	// X = current_task
+  39:../src/ulwos.c **** 		"clrb A\n\t"		// A = 0 (AX = current_task)
+  40:../src/ulwos.c **** 		"shlw AX,1\n\t"		// AX = current_task*2
+  41:../src/ulwos.c **** 		"movw BC,%[tsp]\n\t"// BC = taskSP
+  42:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = taskSP+(current_task*2) => taskSP[current_task]
+  43:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE = taskSP[current_task]
+  44:../src/ulwos.c **** 		"movw AX,SP\n\t"	// AX = task's SP
+  45:../src/ulwos.c **** 		"movw [DE],AX\n\t"	// task_SP[current_task] = task's SP
+  46:../src/ulwos.c **** 		// now we set the pointer to the context stack, so we can save current context
+  47:../src/ulwos.c **** 		"mov A,#24\n\t"		// A = 24
+  48:../src/ulwos.c **** 		"mov X,%[ct]\n\t"	// X = current_task
+  49:../src/ulwos.c **** 		"inc X\n\t"			// X = current_task+1 (so we to the top of the context stack)
+  50:../src/ulwos.c **** 		"mulu X\n\t"		// AX = 24 * (current_task+1)
+  51:../src/ulwos.c **** 		"addw AX,%[tc]\n\t"	// AX = address of task_context[current_task]
+  52:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
+  53:../src/ulwos.c **** 		:
+  54:../src/ulwos.c **** 		:[ct]"m"(ulwos_current_task),[tc]"i"(ulwos_task_context),[tsp]"i"(ulwos_taskSP)
+  55:../src/ulwos.c **** 	);
+  56:../src/ulwos.c **** 	// now we save registers from banks 2,1 and 0 into the context stack
+  57:../src/ulwos.c **** 	asm ("sel RB2");
+  52                             		.loc 1 57 0
+  53                             	 ; 57 "../src/ulwos.c" 1
   54 001c 61 EF                   		sel RB2
   55                             	 ; 0 "" 2
-  52:../src/ulwos.c **** 	save_regs();		// save regs from bank 2
-  56                             		.loc 1 52 0
-  57                             	 ; 52 "../src/ulwos.c" 1
+  58:../src/ulwos.c **** 	save_regs();		// save regs from bank 2
+  56                             		.loc 1 58 0
+  57                             	 ; 58 "../src/ulwos.c" 1
   58 001e C1                      		push AX
   59 001f C3                      		push BC
   60 0020 C5                      		push DE
   61 0021 C7                      		push HL
   62                             		
   63                             	 ; 0 "" 2
-  53:../src/ulwos.c **** 	asm ("sel RB1");
-  64                             		.loc 1 53 0
-  65                             	 ; 53 "../src/ulwos.c" 1
+  59:../src/ulwos.c **** 	asm ("sel RB1");
+  64                             		.loc 1 59 0
+  65                             	 ; 59 "../src/ulwos.c" 1
   66 0022 61 DF                   		sel RB1
   67                             	 ; 0 "" 2
-  54:../src/ulwos.c **** 	save_regs();		// save regs from bank 1
-  68                             		.loc 1 54 0
-  69                             	 ; 54 "../src/ulwos.c" 1
+  60:../src/ulwos.c **** 	save_regs();		// save regs from bank 1
+  68                             		.loc 1 60 0
+  69                             	 ; 60 "../src/ulwos.c" 1
   70 0024 C1                      		push AX
   71 0025 C3                      		push BC
   72 0026 C5                      		push DE
   73 0027 C7                      		push HL
   74                             		
   75                             	 ; 0 "" 2
-  55:../src/ulwos.c **** 	asm ("sel RB0");
-  76                             		.loc 1 55 0
-  77                             	 ; 55 "../src/ulwos.c" 1
+  61:../src/ulwos.c **** 	asm ("sel RB0");
+  76                             		.loc 1 61 0
+  77                             	 ; 61 "../src/ulwos.c" 1
   78 0028 61 CF                   		sel RB0
   79                             	 ; 0 "" 2
-  56:../src/ulwos.c **** 	save_regs();		// save regs from bank 0
-  80                             		.loc 1 56 0
-  81                             	 ; 56 "../src/ulwos.c" 1
+  62:../src/ulwos.c **** 	save_regs();		// save regs from bank 0
+  80                             		.loc 1 62 0
+  81                             	 ; 62 "../src/ulwos.c" 1
   82 002a C1                      		push AX
   83 002b C3                      		push BC
   84 002c C5                      		push DE
   85 002d C7                      		push HL
   86                             		
   87                             	 ; 0 "" 2
-  57:../src/ulwos.c **** 	asm ("sel RB3");
-  88                             		.loc 1 57 0
-  89                             	 ; 57 "../src/ulwos.c" 1
+  63:../src/ulwos.c **** 	asm ("sel RB3");
+  88                             		.loc 1 63 0
+  89                             	 ; 63 "../src/ulwos.c" 1
   90 002e 61 FF                   		sel RB3
   91                             	 ; 0 "" 2
-  58:../src/ulwos.c **** }
-  92                             		.loc 1 58 0
+  64:../src/ulwos.c **** }
+  92                             		.loc 1 64 0
   93 0030 D7                      		ret
   94                             	.LFE0:
   96                             		.global	_restore_context
   98                             	_restore_context:
   99                             	.LFB1:
-  59:../src/ulwos.c **** 
-  60:../src/ulwos.c **** void inline restore_context(void){
- 100                             		.loc 1 60 0
-  61:../src/ulwos.c **** 	asm volatile (
- 101                             		.loc 1 61 0
- 102                             	 ; 61 "../src/ulwos.c" 1
+  65:../src/ulwos.c **** 
+  66:../src/ulwos.c **** void inline restore_context(void){
+ 100                             		.loc 1 66 0
+  67:../src/ulwos.c **** 	asm volatile (
+ 101                             		.loc 1 67 0
+ 102                             	 ; 67 "../src/ulwos.c" 1
  103 0031 51 18                   		mov A,#24
- 104 0033 D9 01 00                		mov X,!_current_task
- 105 0036 80                      		inc X
- 106 0037 D6                      		mulu X
- 107 0038 04 12 00                		addw AX,#_task_context
- 108 003b BE F8                   		movw SP,AX
- 109                             		
- 110                             	 ; 0 "" 2
-  62:../src/ulwos.c **** 		// now we set the pointer to the context stack, so we can save current context
-  63:../src/ulwos.c **** 		"mov A,#24\n\t"		// A = 24
-  64:../src/ulwos.c **** 		"mov X,%0\n\t"		// X = current_task
-  65:../src/ulwos.c **** 		"inc X\n\t"			// X = current_task+1 (so we to the top of the context stack)
-  66:../src/ulwos.c **** 		"mulu X\n\t"		// AX = 24 * (current_task+1)
-  67:../src/ulwos.c **** 		"addw AX,%1\n\t"	// AX = address of task_context[current_task]
-  68:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
-  69:../src/ulwos.c **** 		:
-  70:../src/ulwos.c **** 		:"m"(current_task),"i"(task_context)
-  71:../src/ulwos.c **** 	);
-  72:../src/ulwos.c **** 	// now we restore registers from banks 0,1 and 2 from the stack
-  73:../src/ulwos.c **** 	asm ("sel RB0");
- 111                             		.loc 1 73 0
- 112                             	 ; 73 "../src/ulwos.c" 1
- 113 003d 61 CF                   		sel RB0
- 114                             	 ; 0 "" 2
-  74:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 0
- 115                             		.loc 1 74 0
- 116                             	 ; 74 "../src/ulwos.c" 1
- 117 003f C6                      		pop HL
- 118 0040 C4                      		pop DE
- 119 0041 C2                      		pop BC
- 120 0042 C0                      		pop AX
- 121                             		
- 122                             	 ; 0 "" 2
-  75:../src/ulwos.c **** 	asm ("sel RB1");
- 123                             		.loc 1 75 0
- 124                             	 ; 75 "../src/ulwos.c" 1
- 125 0043 61 DF                   		sel RB1
- 126                             	 ; 0 "" 2
-  76:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 1
- 127                             		.loc 1 76 0
- 128                             	 ; 76 "../src/ulwos.c" 1
- 129 0045 C6                      		pop HL
- 130 0046 C4                      		pop DE
- 131 0047 C2                      		pop BC
- 132 0048 C0                      		pop AX
- 133                             		
- 134                             	 ; 0 "" 2
-  77:../src/ulwos.c **** 	asm ("sel RB2");
- 135                             		.loc 1 77 0
- 136                             	 ; 77 "../src/ulwos.c" 1
- 137 0049 61 EF                   		sel RB2
- 138                             	 ; 0 "" 2
-  78:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 2
- 139                             		.loc 1 78 0
- 140                             	 ; 78 "../src/ulwos.c" 1
- 141 004b C6                      		pop HL
- 142 004c C4                      		pop DE
- 143 004d C2                      		pop BC
- 144 004e C0                      		pop AX
- 145                             		
- 146                             	 ; 0 "" 2
-  79:../src/ulwos.c **** 	asm volatile (
- 147                             		.loc 1 79 0
- 148                             	 ; 79 "../src/ulwos.c" 1
- 149 004f D9 01 00                		mov X,!_current_task
- 150 0052 F1                      		clrb A
- 151 0053 31 1D                   		shlw AX,1
- 152 0055 32 02 00                		movw BC,#_taskSP
- 153 0058 03                      		addw AX,BC
- 154 0059 14                      		movw DE,AX
- 155 005a A9                      		movw AX,[DE]
- 156 005b BE F8                   		movw SP,AX
- 157 005d 61 FC                   		reti
+ 104 0033 D9 01 00                		mov X,!_ulwos_current_task
+ 105 0036 D6                      		mulu X
+ 106 0037 04 0A 00                		addw AX,#_ulwos_task_context
+ 107 003a BE F8                   		movw SP,AX
+ 108                             		
+ 109                             	 ; 0 "" 2
+  68:../src/ulwos.c **** 		// now we set the pointer to the context stack, so we can save current context
+  69:../src/ulwos.c **** 		"mov A,#24\n\t"		// A = 24
+  70:../src/ulwos.c **** 		"mov X,%[ct]\n\t"	// X = current_task
+  71:../src/ulwos.c **** 		"mulu X\n\t"		// AX = 24 * (current_task)
+  72:../src/ulwos.c **** 		"addw AX,%[tc]\n\t"	// AX = address of task_context[current_task]
+  73:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP to the top of task's context stack
+  74:../src/ulwos.c **** 		:
+  75:../src/ulwos.c **** 		:[ct]"m"(ulwos_current_task),[tc]"i"(ulwos_task_context)
+  76:../src/ulwos.c **** 	);
+  77:../src/ulwos.c **** 	// now we restore registers from banks 0,1 and 2 from the stack
+  78:../src/ulwos.c **** 	asm ("sel RB0");
+ 110                             		.loc 1 78 0
+ 111                             	 ; 78 "../src/ulwos.c" 1
+ 112 003c 61 CF                   		sel RB0
+ 113                             	 ; 0 "" 2
+  79:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 0
+ 114                             		.loc 1 79 0
+ 115                             	 ; 79 "../src/ulwos.c" 1
+ 116 003e C6                      		pop HL
+ 117 003f C4                      		pop DE
+ 118 0040 C2                      		pop BC
+ 119 0041 C0                      		pop AX
+ 120                             		
+ 121                             	 ; 0 "" 2
+  80:../src/ulwos.c **** 	asm ("sel RB1");
+ 122                             		.loc 1 80 0
+ 123                             	 ; 80 "../src/ulwos.c" 1
+ 124 0042 61 DF                   		sel RB1
+ 125                             	 ; 0 "" 2
+  81:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 1
+ 126                             		.loc 1 81 0
+ 127                             	 ; 81 "../src/ulwos.c" 1
+ 128 0044 C6                      		pop HL
+ 129 0045 C4                      		pop DE
+ 130 0046 C2                      		pop BC
+ 131 0047 C0                      		pop AX
+ 132                             		
+ 133                             	 ; 0 "" 2
+  82:../src/ulwos.c **** 	asm ("sel RB2");
+ 134                             		.loc 1 82 0
+ 135                             	 ; 82 "../src/ulwos.c" 1
+ 136 0048 61 EF                   		sel RB2
+ 137                             	 ; 0 "" 2
+  83:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 2
+ 138                             		.loc 1 83 0
+ 139                             	 ; 83 "../src/ulwos.c" 1
+ 140 004a C6                      		pop HL
+ 141 004b C4                      		pop DE
+ 142 004c C2                      		pop BC
+ 143 004d C0                      		pop AX
+ 144                             		
+ 145                             	 ; 0 "" 2
+  84:../src/ulwos.c **** 	asm volatile (
+ 146                             		.loc 1 84 0
+ 147                             	 ; 84 "../src/ulwos.c" 1
+ 148 004e 61 FF                   		sel RB3
+ 149 0050 D9 01 00                		mov X,!_ulwos_current_task
+ 150 0053 F1                      		clrb A
+ 151 0054 31 1D                   		shlw AX,1
+ 152 0056 32 02 00                		movw BC,#_ulwos_taskSP
+ 153 0059 03                      		addw AX,BC
+ 154 005a 14                      		movw DE,AX
+ 155 005b A9                      		movw AX,[DE]
+ 156 005c BE F8                   		movw SP,AX
+ 157 005e 61 FC                   		reti
  158                             		
  159                             	 ; 0 "" 2
-  80:../src/ulwos.c **** 		"mov X,%0\n\t"		// X = current_task
-  81:../src/ulwos.c **** 		"clrb A\n\t"		// A = 0 (AX = current_task)
-  82:../src/ulwos.c **** 		"shlw AX,1\n\t"		// AX = current_task*2
-  83:../src/ulwos.c **** 		"movw BC,%1\n\t"	// BC = taskSP
-  84:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = address of taskSP+(current_task*2) => taskSP[current_task]
-  85:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE = address of taskSP[current_task]
-  86:../src/ulwos.c **** 		"movw AX,[DE]\n\t"	// AX = taskSP[current_task]
-  87:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP for the current task
-  88:../src/ulwos.c **** 		"reti\n\t"			// return from this interrupt (change the context)
-  89:../src/ulwos.c **** 		:
-  90:../src/ulwos.c **** 		:"m"(current_task),"i"(taskSP)
-  91:../src/ulwos.c **** 	);
-  92:../src/ulwos.c **** }
- 160                             		.loc 1 92 0
- 161 005f D7                      		ret
+  85:../src/ulwos.c **** 		"sel RB3\n\t"
+  86:../src/ulwos.c **** 		"mov X,%[ct]\n\t"	// X = current_task
+  87:../src/ulwos.c **** 		"clrb A\n\t"		// A = 0 (AX = current_task)
+  88:../src/ulwos.c **** 		"shlw AX,1\n\t"		// AX = current_task*2
+  89:../src/ulwos.c **** 		"movw BC,%[tsp]\n\t"// BC = taskSP
+  90:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = address of taskSP+(current_task*2) => taskSP[current_task]
+  91:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE = address of taskSP[current_task]
+  92:../src/ulwos.c **** 		"movw AX,[DE]\n\t"	// AX = taskSP[current_task]
+  93:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP for the current task
+  94:../src/ulwos.c **** 		"reti\n\t"			// return from this interrupt (change the context)
+  95:../src/ulwos.c **** 		:
+  96:../src/ulwos.c **** 		:[ct]"m"(ulwos_current_task),[tsp]"i"(ulwos_taskSP)
+  97:../src/ulwos.c **** 	);
+  98:../src/ulwos.c **** }
+ 160                             		.loc 1 98 0
+ 161 0060 D7                      		ret
  162                             	.LFE1:
  164                             		.global	_ulwos_create_task
  166                             	_ulwos_create_task:
  167                             	.LFB2:
-  93:../src/ulwos.c **** 
-  94:../src/ulwos.c **** ULWOS_TASKHANDLER ulwos_create_task(void * task_address){
- 168                             		.loc 1 94 0
+  99:../src/ulwos.c **** 
+ 100:../src/ulwos.c **** ULWOS_TASKHANDLER ulwos_create_task(void * task_address){
+ 168                             		.loc 1 100 0
  169                             	.LVL0:
-  95:../src/ulwos.c **** 	if (num_tasks>=ULWOS_NUM_TASKS) return -1;
- 170                             		.loc 1 95 0
- 171 0060 40 00 00 07             		cmp	!_num_tasks, #7
- 172 0064 61 F3                   		 sknh
- 173 0066 EC AD 00 00             		 br	!!.L5
-  96:../src/ulwos.c **** 	tempSP = (int) task_address;
- 174                             		.loc 1 96 0
- 175 006a A8 04                   		movw	ax, [sp+4]
- 176 006c BF 92 01                		movw	!_tempSP, ax
-  97:../src/ulwos.c **** 	current_task = num_tasks;
- 177                             		.loc 1 97 0
- 178 006f 8F 00 00                		mov	a, !_num_tasks
- 179 0072 9F 01 00                		mov	!_current_task, a
-  98:../src/ulwos.c **** 	num_tasks++;
- 180                             		.loc 1 98 0
- 181 0075 A0 00 00                		inc	!_num_tasks
-  99:../src/ulwos.c **** 	asm volatile (
- 182                             		.loc 1 99 0
- 183                             	 ; 99 "../src/ulwos.c" 1
- 184 0078 61 FF                   		sel RB3
- 185 007a FB F8 FF                		movw HL,SP
- 186 007d 51 80                   		mov A,#128
- 187 007f D9 01 00                		mov X,!_current_task
- 188 0082 80                      		inc X
- 189 0083 D6                      		mulu X
- 190 0084 12                      		movw BC,AX
- 191 0085 30 00 00                		movw AX,#_task_stack
- 192 0088 03                      		addw AX,BC
- 193 0089 BE F8                   		movw SP,AX
- 194 008b 14                      		movw DE,AX
- 195 008c 30 00 86                		movw AX,#0x8600
- 196 008f C1                      		push AX
- 197 0090 AF 92 01                		movw AX,!_tempSP
- 198 0093 C1                      		push AX
- 199                             		
- 200                             	 ; 0 "" 2
- 100:../src/ulwos.c **** 		"sel RB3\n\t"
- 101:../src/ulwos.c **** 		"movw HL,SP\n\t"	// HL has the old SP
- 102:../src/ulwos.c **** 		"mov A,%0\n\t"		// A = ULWOS_TASK_STACK_SIZE
- 103:../src/ulwos.c **** 		"mov X,%1\n\t"		// X = current_task
- 104:../src/ulwos.c **** 		"inc X\n\t"			// X = current_task+1 (so we can calculate the top of the current stack)
- 105:../src/ulwos.c **** 		"mulu X\n\t"		// AX = ULWOS_TASK_STACK_SIZE * (current_task+1)
- 106:../src/ulwos.c **** 		"movw BC,AX\n\t"
- 107:../src/ulwos.c **** 		"movw AX,%2\n\t"
- 108:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = pointer to task_stack[current_stack]
- 109:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP to the top of the new task stack
- 110:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE has the TOS for this task
- 111:../src/ulwos.c **** 		"movw AX,#0x8600\n\t"
- 112:../src/ulwos.c **** 		"push AX\n\t"		// save PSW and PCH (all 0)
- 113:../src/ulwos.c **** 		"movw AX,%3\n\t"	// AX = task function address (stored in tempSP)
- 114:../src/ulwos.c **** 		"push AX\n\t"		// save the function address onto stack
- 115:../src/ulwos.c **** 		:
- 116:../src/ulwos.c **** 		:"i"(ULWOS_TASK_STACK_SIZE),"m"(current_task),"i"(task_stack),"m"(tempSP)
- 117:../src/ulwos.c **** 	);
- 118:../src/ulwos.c **** 	asm volatile (
- 201                             		.loc 1 118 0
- 202                             	 ; 118 "../src/ulwos.c" 1
- 203 0094 D9 01 00                		mov X,!_current_task
- 204 0097 F1                      		clrb A
- 205 0098 31 1D                   		shlw AX,1
- 206 009a 32 02 00                		movw BC,#_taskSP
- 207 009d 03                      		addw AX,BC
- 208 009e 14                      		movw DE,AX
- 209 009f AE F8                   		movw AX,SP
- 210 00a1 B9                      		movw [DE],AX
- 211 00a2 17                      		movw AX,HL
- 212 00a3 BE F8                   		movw SP,AX
- 213 00a5 61 CF                   		sel RB0
- 214                             		
- 215                             	 ; 0 "" 2
- 119:../src/ulwos.c **** 		"mov X,%1\n\t"		// X = current_task
- 120:../src/ulwos.c **** 		"clrb A\n\t"		// A = 0 (AX = current_task)
- 121:../src/ulwos.c **** 		"shlw AX,1\n\t"		// AX = current_task*2
- 122:../src/ulwos.c **** 		"movw BC,%0\n\t"	// BC = taskSP
- 123:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = taskSP+(current_task*2) => taskSP[current_task]
- 124:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE = taskSP[current_task]
- 125:../src/ulwos.c **** 		"movw AX,SP\n\t"	// AX = task's SP
- 126:../src/ulwos.c **** 		"movw [DE],AX\n\t"	// task_SP[current_task] = task's SP
- 127:../src/ulwos.c **** 		"movw AX,HL\n\t"
- 128:../src/ulwos.c **** 		"movw SP,AX\n\t"	// restore the old SP
- 129:../src/ulwos.c **** 		"sel RB0\n\t"
- 130:../src/ulwos.c **** 		:
- 131:../src/ulwos.c **** 		:"i"(taskSP),"m"(current_task)
- 132:../src/ulwos.c **** 	);
- 133:../src/ulwos.c **** 	return current_task;
- 216                             		.loc 1 133 0
- 217 00a7 8F 01 00                		mov	a, !_current_task
- 218 00aa 9D F0                   		mov	r8, a
- 134:../src/ulwos.c **** }
- 219                             		.loc 1 134 0
- 220 00ac D7                      		ret
- 221                             	.L5:
-  95:../src/ulwos.c **** 	tempSP = (int) task_address;
- 222                             		.loc 1 95 0
- 223 00ad CD F0 FF                		mov	r8, #-1
- 224                             		.loc 1 134 0
- 225 00b0 D7                      		ret
- 226                             	.LFE2:
- 228                             		.global	_ulwos_start
- 230                             	_ulwos_start:
- 231                             	.LFB3:
- 135:../src/ulwos.c **** 
- 136:../src/ulwos.c **** void inline ulwos_start(void){
- 232                             		.loc 1 136 0
- 137:../src/ulwos.c **** 	current_task = 0;
- 233                             		.loc 1 137 0
- 234 00b1 F5 01 00                		clrb	!_current_task
- 138:../src/ulwos.c **** 	OSMC = bWUTMMCK0;		// set LOCO (15kHz) as the IT/RTC clock source
- 235                             		.loc 1 138 0
- 236 00b4 51 10                   		mov	a, #16
- 237 00b6 9F F3 00                		mov	!243, a
- 139:../src/ulwos.c **** 	RTCEN = 1;				// enables the RTC and IT
- 238                             		.loc 1 139 0
- 239 00b9 71 70 F0 00             		set1	!240.7
- 140:../src/ulwos.c **** 	ITMC = bRINTE | 14;		// IT enabled, interval = 1ms
- 240                             		.loc 1 140 0
- 241 00bd 30 0E 80                		movw	ax, #-32754
- 242 00c0 BF 90 FF                		movw	!-112, ax
- 141:../src/ulwos.c **** 	ITMK = 0;				// IT interrupt enabled
- 243                             		.loc 1 141 0
- 244 00c3 71 28 E7 FF             		clr1	!-25.2
- 142:../src/ulwos.c **** 	asm volatile (
- 245                             		.loc 1 142 0
- 246                             	 ; 142 "../src/ulwos.c" 1
- 247 00c7 61 FF                   		sel RB3
- 248 00c9 AF 02 00                		movw AX,!_taskSP
- 249 00cc BE F8                   		movw SP,AX
- 250 00ce 61 FC                   		reti
- 251                             		
- 252                             	 ; 0 "" 2
- 143:../src/ulwos.c **** 		"sel RB3\n\t"		// select register bank 3
- 144:../src/ulwos.c **** 		"movw AX,%0\n\t"	// AX = taskSP[0]
- 145:../src/ulwos.c **** 		"movw SP,AX\n\t"	// SP = AX = taskSP[0]
- 146:../src/ulwos.c **** 		// this is a fake return from interrupt, it restores the PSW and PC from the stack
- 147:../src/ulwos.c **** 		"reti\n\t"
- 148:../src/ulwos.c **** 		:
- 149:../src/ulwos.c **** 		:"m"(taskSP)
- 150:../src/ulwos.c **** 	);
- 151:../src/ulwos.c **** }
- 253                             		.loc 1 151 0
- 254 00d0 D7                      		ret
- 255                             	.LFE3:
- 257                             		.global	_INT_IT
- 259                             	_INT_IT:
- 260                             	.LFB4:
- 152:../src/ulwos.c **** 
- 153:../src/ulwos.c **** void __attribute__ ((naked)) INT_IT(void) {
- 261                             		.loc 1 153 0
- 262                             		; start of function
- 263                             		; push 12: ax bc de hl r8 r10
- 264                             	.LBB6:
- 265                             	.LBB7:
-  30:../src/ulwos.c **** 		"sel RB3\n\t"		// We are going to use bank3 as it is reserved for isr code
- 266                             		.loc 1 30 0
- 267                             	 ; 30 "../src/ulwos.c" 1
- 268 00d1 61 FF                   		sel RB3
- 269 00d3 D9 01 00                		mov X,!_current_task
- 270 00d6 F1                      		clrb A
- 271 00d7 31 1D                   		shlw AX,1
- 272 00d9 32 02 00                		movw BC,#_taskSP
- 273 00dc 03                      		addw AX,BC
- 274 00dd 14                      		movw DE,AX
- 275 00de AE F8                   		movw AX,SP
- 276 00e0 B9                      		movw [DE],AX
- 277 00e1 51 18                   		mov A,#24
- 278 00e3 D9 01 00                		mov X,!_current_task
- 279 00e6 80                      		inc X
- 280 00e7 D6                      		mulu X
- 281 00e8 04 12 00                		addw AX,#_task_context
- 282 00eb BE F8                   		movw SP,AX
- 283                             		
- 284                             	 ; 0 "" 2
-  51:../src/ulwos.c **** 	save_regs();		// save regs from bank 2
- 285                             		.loc 1 51 0
- 286                             	 ; 51 "../src/ulwos.c" 1
- 287 00ed 61 EF                   		sel RB2
- 288                             	 ; 0 "" 2
-  52:../src/ulwos.c **** 	asm ("sel RB1");
- 289                             		.loc 1 52 0
- 290                             	 ; 52 "../src/ulwos.c" 1
- 291 00ef C1                      		push AX
- 292 00f0 C3                      		push BC
- 293 00f1 C5                      		push DE
- 294 00f2 C7                      		push HL
- 295                             		
+ 101:../src/ulwos.c **** 	if (ulwos_num_tasks>=ULWOS_NUM_TASKS) return -1;
+ 170                             		.loc 1 101 0
+ 171 0061 40 00 00 03             		cmp	!_ulwos_num_tasks, #3
+ 172 0065 61 F3                   		 sknh
+ 173 0067 EC B8 00 00             		 br	!!.L5
+ 102:../src/ulwos.c **** 	ulwos_tempSP = (int) task_address;
+ 174                             		.loc 1 102 0
+ 175 006b A8 04                   		movw	ax, [sp+4]
+ 176 006d BF 6A 00                		movw	!_ulwos_tempSP, ax
+ 103:../src/ulwos.c **** 	ulwos_current_task = ulwos_num_tasks;
+ 177                             		.loc 1 103 0
+ 178 0070 8F 00 00                		mov	a, !_ulwos_num_tasks
+ 179 0073 9F 01 00                		mov	!_ulwos_current_task, a
+ 104:../src/ulwos.c **** 	ulwos_num_tasks++;
+ 180                             		.loc 1 104 0
+ 181 0076 A0 00 00                		inc	!_ulwos_num_tasks
+ 105:../src/ulwos.c **** 	asm volatile (
+ 182                             		.loc 1 105 0
+ 183                             	 ; 105 "../src/ulwos.c" 1
+ 184 0079 61 FF                   		sel RB3
+ 185 007b FB F8 FF                		movw HL,SP
+ 186 007e F6                      		clrw AX
+ 187 007f 34 80 00                		movw DE,#128
+ 188 0082 F3                      		clrb B
+ 189 0083 F9 01 00                		mov C,!_ulwos_current_task
+ 190 0086 82                      		inc C
+ 191 0087 05                      		LOOP:addw AX,DE
+ 192 0088 B3                      		decw BC
+ 193 0089 D3                      		cmp0 B
+ 194 008a DF FB                   		bnz $LOOP
+ 195 008c D2                      		cmp0 C
+ 196 008d DF F8                   		bnz $LOOP
+ 197 008f 12                      		movw BC,AX
+ 198 0090 30 00 00                		movw AX,#_ulwos_task_stack
+ 199 0093 03                      		addw AX,BC
+ 200 0094 BE F8                   		movw SP,AX
+ 201 0096 14                      		movw DE,AX
+ 202 0097 30 00 86                		movw AX,#0x8600
+ 203 009a C1                      		push AX
+ 204 009b AF 6A 00                		movw AX,!_ulwos_tempSP
+ 205 009e C1                      		push AX
+ 206                             		
+ 207                             	 ; 0 "" 2
+ 106:../src/ulwos.c **** 		"sel RB3\n\t"
+ 107:../src/ulwos.c **** 		"movw HL,SP\n\t"	// HL has the old SP
+ 108:../src/ulwos.c **** 		"clrw AX\n\t"		// AX = 0
+ 109:../src/ulwos.c **** 		"movw DE,%[tsz]\n\t"// DE = ULWOS_TASK_STACK_SIZE
+ 110:../src/ulwos.c **** 		"clrb B\n\t"
+ 111:../src/ulwos.c **** 		"mov C,%[ct]\n\t"	// BC = current_task
+ 112:../src/ulwos.c **** 		"inc C\n\t"
+ 113:../src/ulwos.c **** 		// this is a simple 16-bit multiply
+ 114:../src/ulwos.c **** 		"LOOP:"
+ 115:../src/ulwos.c **** 		"addw AX,DE\n\t"	// AX = AX + ULWOS_TASK_STACK_SIZE
+ 116:../src/ulwos.c **** 		"decw BC\n\t"		// BC = BC-1
+ 117:../src/ulwos.c **** 		"cmp0 B\n\t"		// compares B with 0
+ 118:../src/ulwos.c **** 		"bnz $LOOP\n\t"		// branch to loop if not zero
+ 119:../src/ulwos.c **** 		"cmp0 C\n\t"		// compares C with 0
+ 120:../src/ulwos.c **** 		"bnz $LOOP\n\t"		// branch to loop if not zero
+ 121:../src/ulwos.c **** 		// AX = ULWOS_TASK_STACK_SIZE * (current_task+1)
+ 122:../src/ulwos.c **** 		"movw BC,AX\n\t"
+ 123:../src/ulwos.c **** 		"movw AX,%[ts]\n\t"
+ 124:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = pointer to task_stack[current_stack]
+ 125:../src/ulwos.c **** 		"movw SP,AX\n\t"	// set the SP to the top of the new task stack
+ 126:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE has the TOS for this task
+ 127:../src/ulwos.c **** 		"movw AX,#0x8600\n\t"
+ 128:../src/ulwos.c **** 		"push AX\n\t"		// save PSW and PCH (all 0)
+ 129:../src/ulwos.c **** 		"movw AX,%[tsp]\n\t"// AX = task function address (stored in tempSP)
+ 130:../src/ulwos.c **** 		"push AX\n\t"		// save the function address onto stack
+ 131:../src/ulwos.c **** 		:
+ 132:../src/ulwos.c **** 		:[tsz]"i"(ULWOS_TASK_STACK_SIZE),[ct]"m"(ulwos_current_task),[ts]"i"(ulwos_task_stack),[tsp]"m"(u
+ 133:../src/ulwos.c **** 	);
+ 134:../src/ulwos.c **** 	asm volatile (
+ 208                             		.loc 1 134 0
+ 209                             	 ; 134 "../src/ulwos.c" 1
+ 210 009f D9 01 00                		mov X,!_ulwos_current_task
+ 211 00a2 F1                      		clrb A
+ 212 00a3 31 1D                   		shlw AX,1
+ 213 00a5 32 02 00                		movw BC,#_ulwos_taskSP
+ 214 00a8 03                      		addw AX,BC
+ 215 00a9 14                      		movw DE,AX
+ 216 00aa AE F8                   		movw AX,SP
+ 217 00ac B9                      		movw [DE],AX
+ 218 00ad 17                      		movw AX,HL
+ 219 00ae BE F8                   		movw SP,AX
+ 220 00b0 61 CF                   		sel RB0
+ 221                             		
+ 222                             	 ; 0 "" 2
+ 135:../src/ulwos.c **** 		"mov X,%[ct]\n\t"	// X = current_task
+ 136:../src/ulwos.c **** 		"clrb A\n\t"		// A = 0 (AX = current_task)
+ 137:../src/ulwos.c **** 		"shlw AX,1\n\t"		// AX = current_task*2
+ 138:../src/ulwos.c **** 		"movw BC,%[tsp]\n\t"// BC = taskSP
+ 139:../src/ulwos.c **** 		"addw AX,BC\n\t"	// AX = taskSP+(current_task*2) => taskSP[current_task]
+ 140:../src/ulwos.c **** 		"movw DE,AX\n\t"	// DE = taskSP[current_task]
+ 141:../src/ulwos.c **** 		"movw AX,SP\n\t"	// AX = task's SP
+ 142:../src/ulwos.c **** 		"movw [DE],AX\n\t"	// task_SP[current_task] = task's SP
+ 143:../src/ulwos.c **** 		"movw AX,HL\n\t"
+ 144:../src/ulwos.c **** 		"movw SP,AX\n\t"	// restore the old SP
+ 145:../src/ulwos.c **** 		"sel RB0\n\t"
+ 146:../src/ulwos.c **** 		:
+ 147:../src/ulwos.c **** 		:[tsp]"i"(ulwos_taskSP),[ct]"m"(ulwos_current_task)
+ 148:../src/ulwos.c **** 	);
+ 149:../src/ulwos.c **** 	return ulwos_current_task;
+ 223                             		.loc 1 149 0
+ 224 00b2 8F 01 00                		mov	a, !_ulwos_current_task
+ 225 00b5 9D F0                   		mov	r8, a
+ 150:../src/ulwos.c **** }
+ 226                             		.loc 1 150 0
+ 227 00b7 D7                      		ret
+ 228                             	.L5:
+ 101:../src/ulwos.c **** 	ulwos_tempSP = (int) task_address;
+ 229                             		.loc 1 101 0
+ 230 00b8 CD F0 FF                		mov	r8, #-1
+ 231                             		.loc 1 150 0
+ 232 00bb D7                      		ret
+ 233                             	.LFE2:
+ 235                             		.global	_ulwos_start
+ 237                             	_ulwos_start:
+ 238                             	.LFB3:
+ 151:../src/ulwos.c **** 
+ 152:../src/ulwos.c **** void inline ulwos_start(void){
+ 239                             		.loc 1 152 0
+ 153:../src/ulwos.c **** 	ulwos_current_task = 0;
+ 240                             		.loc 1 153 0
+ 241 00bc F5 01 00                		clrb	!_ulwos_current_task
+ 154:../src/ulwos.c **** 	OSMC = bWUTMMCK0;		// set LOCO (15kHz) as the IT/RTC clock source
+ 242                             		.loc 1 154 0
+ 243 00bf 51 10                   		mov	a, #16
+ 244 00c1 9F F3 00                		mov	!243, a
+ 155:../src/ulwos.c **** 	RTCEN = 1;				// enables the RTC and IT
+ 245                             		.loc 1 155 0
+ 246 00c4 71 70 F0 00             		set1	!240.7
+ 156:../src/ulwos.c **** 	ITMC = bRINTE | 14;		// IT enabled, interval = 1ms
+ 247                             		.loc 1 156 0
+ 248 00c8 30 0E 80                		movw	ax, #-32754
+ 249 00cb BF 90 FF                		movw	!-112, ax
+ 157:../src/ulwos.c **** 	ITMK = 0;				// IT interrupt enabled
+ 250                             		.loc 1 157 0
+ 251 00ce 71 28 E7 FF             		clr1	!-25.2
+ 158:../src/ulwos.c **** 	asm volatile (
+ 252                             		.loc 1 158 0
+ 253                             	 ; 158 "../src/ulwos.c" 1
+ 254 00d2 61 FF                   		sel RB3
+ 255 00d4 AF 02 00                		movw AX,!_ulwos_taskSP
+ 256 00d7 BE F8                   		movw SP,AX
+ 257 00d9 61 FC                   		reti
+ 258 00db 00                      		nop
+ 259                             		
+ 260                             	 ; 0 "" 2
+ 159:../src/ulwos.c **** 		"sel RB3\n\t"		// select register bank 3
+ 160:../src/ulwos.c **** 		"movw AX,%[tsp]\n\t"// AX = taskSP[0]
+ 161:../src/ulwos.c **** 		"movw SP,AX\n\t"	// SP = AX = taskSP[0]
+ 162:../src/ulwos.c **** 		// this is a fake return from interrupt, it restores the PSW and PC from the stack
+ 163:../src/ulwos.c **** 		"reti\n\t"
+ 164:../src/ulwos.c **** 		"nop\n\t"
+ 165:../src/ulwos.c **** 		:
+ 166:../src/ulwos.c **** 		:[tsp]"m"(ulwos_taskSP)
+ 167:../src/ulwos.c **** 	);
+ 168:../src/ulwos.c **** }
+ 261                             		.loc 1 168 0
+ 262 00dc D7                      		ret
+ 263                             	.LFE3:
+ 265                             		.global	_INT_IT
+ 267                             	_INT_IT:
+ 268                             	.LFB4:
+ 169:../src/ulwos.c **** 
+ 170:../src/ulwos.c **** void __attribute__ ((naked)) INT_IT(void) {
+ 269                             		.loc 1 170 0
+ 270                             		; start of function
+ 271                             		; push 12: ax bc de hl r8 r10
+ 272                             	.LBB6:
+ 273                             	.LBB7:
+  36:../src/ulwos.c **** 		"sel RB3\n\t"		// We are going to use bank3 as it is reserved for isr code
+ 274                             		.loc 1 36 0
+ 275                             	 ; 36 "../src/ulwos.c" 1
+ 276 00dd 61 FF                   		sel RB3
+ 277 00df D9 01 00                		mov X,!_ulwos_current_task
+ 278 00e2 F1                      		clrb A
+ 279 00e3 31 1D                   		shlw AX,1
+ 280 00e5 32 02 00                		movw BC,#_ulwos_taskSP
+ 281 00e8 03                      		addw AX,BC
+ 282 00e9 14                      		movw DE,AX
+ 283 00ea AE F8                   		movw AX,SP
+ 284 00ec B9                      		movw [DE],AX
+ 285 00ed 51 18                   		mov A,#24
+ 286 00ef D9 01 00                		mov X,!_ulwos_current_task
+ 287 00f2 80                      		inc X
+ 288 00f3 D6                      		mulu X
+ 289 00f4 04 0A 00                		addw AX,#_ulwos_task_context
+ 290 00f7 BE F8                   		movw SP,AX
+ 291                             		
+ 292                             	 ; 0 "" 2
+  57:../src/ulwos.c **** 	save_regs();		// save regs from bank 2
+ 293                             		.loc 1 57 0
+ 294                             	 ; 57 "../src/ulwos.c" 1
+ 295 00f9 61 EF                   		sel RB2
  296                             	 ; 0 "" 2
-  53:../src/ulwos.c **** 	save_regs();		// save regs from bank 1
- 297                             		.loc 1 53 0
- 298                             	 ; 53 "../src/ulwos.c" 1
- 299 00f3 61 DF                   		sel RB1
- 300                             	 ; 0 "" 2
-  54:../src/ulwos.c **** 	asm ("sel RB0");
- 301                             		.loc 1 54 0
- 302                             	 ; 54 "../src/ulwos.c" 1
- 303 00f5 C1                      		push AX
- 304 00f6 C3                      		push BC
- 305 00f7 C5                      		push DE
- 306 00f8 C7                      		push HL
- 307                             		
+  58:../src/ulwos.c **** 	asm ("sel RB1");
+ 297                             		.loc 1 58 0
+ 298                             	 ; 58 "../src/ulwos.c" 1
+ 299 00fb C1                      		push AX
+ 300 00fc C3                      		push BC
+ 301 00fd C5                      		push DE
+ 302 00fe C7                      		push HL
+ 303                             		
+ 304                             	 ; 0 "" 2
+  59:../src/ulwos.c **** 	save_regs();		// save regs from bank 1
+ 305                             		.loc 1 59 0
+ 306                             	 ; 59 "../src/ulwos.c" 1
+ 307 00ff 61 DF                   		sel RB1
  308                             	 ; 0 "" 2
-  55:../src/ulwos.c **** 	save_regs();		// save regs from bank 0
- 309                             		.loc 1 55 0
- 310                             	 ; 55 "../src/ulwos.c" 1
- 311 00f9 61 CF                   		sel RB0
- 312                             	 ; 0 "" 2
-  56:../src/ulwos.c **** 	asm ("sel RB3");
- 313                             		.loc 1 56 0
- 314                             	 ; 56 "../src/ulwos.c" 1
- 315 00fb C1                      		push AX
- 316 00fc C3                      		push BC
- 317 00fd C5                      		push DE
- 318 00fe C7                      		push HL
- 319                             		
+  60:../src/ulwos.c **** 	asm ("sel RB0");
+ 309                             		.loc 1 60 0
+ 310                             	 ; 60 "../src/ulwos.c" 1
+ 311 0101 C1                      		push AX
+ 312 0102 C3                      		push BC
+ 313 0103 C5                      		push DE
+ 314 0104 C7                      		push HL
+ 315                             		
+ 316                             	 ; 0 "" 2
+  61:../src/ulwos.c **** 	save_regs();		// save regs from bank 0
+ 317                             		.loc 1 61 0
+ 318                             	 ; 61 "../src/ulwos.c" 1
+ 319 0105 61 CF                   		sel RB0
  320                             	 ; 0 "" 2
-  57:../src/ulwos.c **** }
- 321                             		.loc 1 57 0
- 322                             	 ; 57 "../src/ulwos.c" 1
- 323 00ff 61 FF                   		sel RB3
- 324                             	 ; 0 "" 2
- 325                             	.LBE7:
- 326                             	.LBE6:
- 154:../src/ulwos.c **** 	save_context();
- 155:../src/ulwos.c **** 	current_task++;
- 327                             		.loc 1 155 0
- 328 0101 A0 01 00                		inc	!_current_task
- 156:../src/ulwos.c **** 	if (current_task>=num_tasks) current_task=0;
- 329                             		.loc 1 156 0
- 330 0104 8F 01 00                		mov	a, !_current_task
- 331 0107 9D F2                   		mov	r10, a
- 332 0109 8F 00 00                		mov	a, !_num_tasks
- 333 010c 9D F0                   		mov	r8, a
- 334 010e 8D F2                   		mov	a, r10
- 335 0110 31 8F                   		sarw	ax, 8
- 336 0112 CD F1 00                		mov	r9, #0
- 337 0115 46 F0                   		cmpw	ax, r8
- 338 0117 71 FF                   		 xor1	CY, a.7
- 339 0119 71 77 F1                		 xor1	CY, r9.7
- 340 011c 61 D8                   		 sknc
- 341 011e EC 25 01 00             		 br	!!.L9
- 342                             		.loc 1 156 0 is_stmt 0 discriminator 1
- 343 0122 F5 01 00                		clrb	!_current_task
- 344                             	.L9:
- 345                             	.LBB8:
- 346                             	.LBB9:
-  61:../src/ulwos.c **** 		// now we set the pointer to the context stack, so we can save current context
- 347                             		.loc 1 61 0 is_stmt 1
- 348                             	 ; 61 "../src/ulwos.c" 1
- 349 0125 51 18                   		mov A,#24
- 350 0127 D9 01 00                		mov X,!_current_task
- 351 012a 80                      		inc X
- 352 012b D6                      		mulu X
- 353 012c 04 12 00                		addw AX,#_task_context
- 354 012f BE F8                   		movw SP,AX
- 355                             		
- 356                             	 ; 0 "" 2
-  73:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 0
- 357                             		.loc 1 73 0
- 358                             	 ; 73 "../src/ulwos.c" 1
- 359 0131 61 CF                   		sel RB0
- 360                             	 ; 0 "" 2
-  74:../src/ulwos.c **** 	asm ("sel RB1");
- 361                             		.loc 1 74 0
- 362                             	 ; 74 "../src/ulwos.c" 1
- 363 0133 C6                      		pop HL
- 364 0134 C4                      		pop DE
- 365 0135 C2                      		pop BC
- 366 0136 C0                      		pop AX
- 367                             		
- 368                             	 ; 0 "" 2
-  75:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 1
- 369                             		.loc 1 75 0
- 370                             	 ; 75 "../src/ulwos.c" 1
- 371 0137 61 DF                   		sel RB1
- 372                             	 ; 0 "" 2
-  76:../src/ulwos.c **** 	asm ("sel RB2");
- 373                             		.loc 1 76 0
- 374                             	 ; 76 "../src/ulwos.c" 1
- 375 0139 C6                      		pop HL
- 376 013a C4                      		pop DE
- 377 013b C2                      		pop BC
- 378 013c C0                      		pop AX
- 379                             		
- 380                             	 ; 0 "" 2
-  77:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 2
- 381                             		.loc 1 77 0
- 382                             	 ; 77 "../src/ulwos.c" 1
- 383 013d 61 EF                   		sel RB2
- 384                             	 ; 0 "" 2
-  78:../src/ulwos.c **** 	asm volatile (
- 385                             		.loc 1 78 0
- 386                             	 ; 78 "../src/ulwos.c" 1
- 387 013f C6                      		pop HL
- 388 0140 C4                      		pop DE
- 389 0141 C2                      		pop BC
- 390 0142 C0                      		pop AX
- 391                             		
- 392                             	 ; 0 "" 2
-  79:../src/ulwos.c **** 		"mov X,%0\n\t"		// X = current_task
- 393                             		.loc 1 79 0
- 394                             	 ; 79 "../src/ulwos.c" 1
- 395 0143 D9 01 00                		mov X,!_current_task
- 396 0146 F1                      		clrb A
- 397 0147 31 1D                   		shlw AX,1
- 398 0149 32 02 00                		movw BC,#_taskSP
- 399 014c 03                      		addw AX,BC
- 400 014d 14                      		movw DE,AX
- 401 014e A9                      		movw AX,[DE]
- 402 014f BE F8                   		movw SP,AX
- 403 0151 61 FC                   		reti
- 404                             		
- 405                             	 ; 0 "" 2
- 406                             	.LBE9:
- 407                             	.LBE8:
- 408                             	.LFE4:
- 410                             		.comm	_task_stack,1024,1
- 411                             		.local	_num_tasks
- 412                             		.comm	_num_tasks,1,1
- 413                             		.local	_current_task
- 414                             		.comm	_current_task,1,1
- 415                             		.local	_taskSP
- 416                             		.comm	_taskSP,16,2
- 417                             		.local	_task_context
- 418                             		.comm	_task_context,384,2
- 419                             		.local	_tempSP
- 420                             		.comm	_tempSP,2,2
- 479                             	.Letext0:
- 480                             		.file 2 "../src/iodefine.h"
- 481                             		.file 3 "../src/iodefine_ext.h"
- 482                             		.file 4 "../src/ulwos.h"
+  62:../src/ulwos.c **** 	asm ("sel RB3");
+ 321                             		.loc 1 62 0
+ 322                             	 ; 62 "../src/ulwos.c" 1
+ 323 0107 C1                      		push AX
+ 324 0108 C3                      		push BC
+ 325 0109 C5                      		push DE
+ 326 010a C7                      		push HL
+ 327                             		
+ 328                             	 ; 0 "" 2
+  63:../src/ulwos.c **** }
+ 329                             		.loc 1 63 0
+ 330                             	 ; 63 "../src/ulwos.c" 1
+ 331 010b 61 FF                   		sel RB3
+ 332                             	 ; 0 "" 2
+ 333                             	.LBE7:
+ 334                             	.LBE6:
+ 171:../src/ulwos.c **** 	save_context();
+ 172:../src/ulwos.c **** 	ulwos_current_task++;
+ 335                             		.loc 1 172 0
+ 336 010d A0 01 00                		inc	!_ulwos_current_task
+ 173:../src/ulwos.c **** 	if (ulwos_current_task>=ulwos_num_tasks) ulwos_current_task=0;
+ 337                             		.loc 1 173 0
+ 338 0110 8F 01 00                		mov	a, !_ulwos_current_task
+ 339 0113 9D F2                   		mov	r10, a
+ 340 0115 8F 00 00                		mov	a, !_ulwos_num_tasks
+ 341 0118 9D F0                   		mov	r8, a
+ 342 011a 8D F2                   		mov	a, r10
+ 343 011c 31 8F                   		sarw	ax, 8
+ 344 011e CD F1 00                		mov	r9, #0
+ 345 0121 46 F0                   		cmpw	ax, r8
+ 346 0123 71 FF                   		 xor1	CY, a.7
+ 347 0125 71 77 F1                		 xor1	CY, r9.7
+ 348 0128 61 D8                   		 sknc
+ 349 012a EC 31 01 00             		 br	!!.L9
+ 350                             		.loc 1 173 0 is_stmt 0 discriminator 1
+ 351 012e F5 01 00                		clrb	!_ulwos_current_task
+ 352                             	.L9:
+ 353                             	.LBB8:
+ 354                             	.LBB9:
+  67:../src/ulwos.c **** 		// now we set the pointer to the context stack, so we can save current context
+ 355                             		.loc 1 67 0 is_stmt 1
+ 356                             	 ; 67 "../src/ulwos.c" 1
+ 357 0131 51 18                   		mov A,#24
+ 358 0133 D9 01 00                		mov X,!_ulwos_current_task
+ 359 0136 D6                      		mulu X
+ 360 0137 04 0A 00                		addw AX,#_ulwos_task_context
+ 361 013a BE F8                   		movw SP,AX
+ 362                             		
+ 363                             	 ; 0 "" 2
+  78:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 0
+ 364                             		.loc 1 78 0
+ 365                             	 ; 78 "../src/ulwos.c" 1
+ 366 013c 61 CF                   		sel RB0
+ 367                             	 ; 0 "" 2
+  79:../src/ulwos.c **** 	asm ("sel RB1");
+ 368                             		.loc 1 79 0
+ 369                             	 ; 79 "../src/ulwos.c" 1
+ 370 013e C6                      		pop HL
+ 371 013f C4                      		pop DE
+ 372 0140 C2                      		pop BC
+ 373 0141 C0                      		pop AX
+ 374                             		
+ 375                             	 ; 0 "" 2
+  80:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 1
+ 376                             		.loc 1 80 0
+ 377                             	 ; 80 "../src/ulwos.c" 1
+ 378 0142 61 DF                   		sel RB1
+ 379                             	 ; 0 "" 2
+  81:../src/ulwos.c **** 	asm ("sel RB2");
+ 380                             		.loc 1 81 0
+ 381                             	 ; 81 "../src/ulwos.c" 1
+ 382 0144 C6                      		pop HL
+ 383 0145 C4                      		pop DE
+ 384 0146 C2                      		pop BC
+ 385 0147 C0                      		pop AX
+ 386                             		
+ 387                             	 ; 0 "" 2
+  82:../src/ulwos.c **** 	restore_regs();		// restore regs from bank 2
+ 388                             		.loc 1 82 0
+ 389                             	 ; 82 "../src/ulwos.c" 1
+ 390 0148 61 EF                   		sel RB2
+ 391                             	 ; 0 "" 2
+  83:../src/ulwos.c **** 	asm volatile (
+ 392                             		.loc 1 83 0
+ 393                             	 ; 83 "../src/ulwos.c" 1
+ 394 014a C6                      		pop HL
+ 395 014b C4                      		pop DE
+ 396 014c C2                      		pop BC
+ 397 014d C0                      		pop AX
+ 398                             		
+ 399                             	 ; 0 "" 2
+  84:../src/ulwos.c **** 		"sel RB3\n\t"
+ 400                             		.loc 1 84 0
+ 401                             	 ; 84 "../src/ulwos.c" 1
+ 402 014e 61 FF                   		sel RB3
+ 403 0150 D9 01 00                		mov X,!_ulwos_current_task
+ 404 0153 F1                      		clrb A
+ 405 0154 31 1D                   		shlw AX,1
+ 406 0156 32 02 00                		movw BC,#_ulwos_taskSP
+ 407 0159 03                      		addw AX,BC
+ 408 015a 14                      		movw DE,AX
+ 409 015b A9                      		movw AX,[DE]
+ 410 015c BE F8                   		movw SP,AX
+ 411 015e 61 FC                   		reti
+ 412                             		
+ 413                             	 ; 0 "" 2
+ 414                             	.LBE9:
+ 415                             	.LBE8:
+ 416                             	.LFE4:
+ 418                             		.comm	_ulwos_task_stack,512,1
+ 419                             		.local	_ulwos_num_tasks
+ 420                             		.comm	_ulwos_num_tasks,1,1
+ 421                             		.local	_ulwos_current_task
+ 422                             		.comm	_ulwos_current_task,1,1
+ 423                             		.local	_ulwos_taskSP
+ 424                             		.comm	_ulwos_taskSP,8,2
+ 425                             		.local	_ulwos_task_context
+ 426                             		.comm	_ulwos_task_context,96,2
+ 427                             		.local	_ulwos_tempSP
+ 428                             		.comm	_ulwos_tempSP,2,2
+ 487                             	.Letext0:
+ 488                             		.file 2 "../src/iodefine.h"
+ 489                             		.file 3 "../src/iodefine_ext.h"
+ 490                             		.file 4 "../src/ulwos.h"

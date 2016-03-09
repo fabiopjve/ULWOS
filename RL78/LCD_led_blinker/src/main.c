@@ -26,7 +26,7 @@
 #define LED 	P6_bit.no3
 #define LED_DIR PM6_bit.no3
 
-void task1(void){
+void __attribute__ ((noreturn)) task1(void){
 	volatile unsigned long count;
 	LED_DIR = 0;
 	while (1){
@@ -37,7 +37,7 @@ void task1(void){
 	}
 }
 
-void task2(void){
+void __attribute__ ((noreturn)) task2(void){
 	volatile unsigned char aux;
 	volatile unsigned long temp;
 	LCD_init(DISPLAY_8x5|_2LINES,DISPLAY_ON|CURSOR_OFF|CURSOR_FIXED);
@@ -57,7 +57,7 @@ void main(void){
 	ULWOS_TASKHANDLER tk1 = ulwos_create_task(&task1);
 	ULWOS_TASKHANDLER tk2 = ulwos_create_task(&task2);
 	ulwos_start();
-	// the following code is never executed!!! It is here "just in case" ;)
+	// the following code is never reached!!! It is here "just in case" ;)
 	while (1){
 	}
 }

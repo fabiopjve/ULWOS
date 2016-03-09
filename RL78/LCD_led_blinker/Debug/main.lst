@@ -56,388 +56,369 @@
   26:../src/main.c **** #define LED 	P6_bit.no3
   27:../src/main.c **** #define LED_DIR PM6_bit.no3
   28:../src/main.c **** 
-  29:../src/main.c **** volatile unsigned long counter;
-  30:../src/main.c **** 
-  31:../src/main.c **** void task1(void){
-  32                             		.loc 1 31 0
+  29:../src/main.c **** void __attribute__ ((noreturn)) task1(void){
+  32                             		.loc 1 29 0
   33                             		; start of function
   34                             		; push 4: r16 r18
-  35                             		; locals: 36 bytes
+  35                             		; locals: 28 bytes
   36 0000 61 EF                   		sel	rb2
   37 0002 C1                      		push	ax ; r16
   38                             	.LCFI0:
   39 0003 C3                      		push	bc ; r18
   40                             	.LCFI1:
   41 0004 61 CF                   		sel	rb0
-  42 0006 20 24                   		subw	sp, #36
+  42 0006 20 1C                   		subw	sp, #28
   43                             	.LCFI2:
-  32:../src/main.c **** 	volatile unsigned long count;
-  33:../src/main.c **** 	LED_DIR = 0;
-  44                             		.loc 1 33 0
+  30:../src/main.c **** 	volatile unsigned long count;
+  31:../src/main.c **** 	LED_DIR = 0;
+  44                             		.loc 1 31 0
   45 0008 71 38 26 FF             		clr1	!-218.3
   46                             	.L6:
-  34:../src/main.c **** 	while (1){
-  35:../src/main.c **** 		LED = 0;
-  47                             		.loc 1 35 0
+  32:../src/main.c **** 	while (1){
+  33:../src/main.c **** 		LED = 0;
+  47                             		.loc 1 33 0
   48 000c 71 38 06 FF             		clr1	!-250.3
-  36:../src/main.c **** 		for (count=0; count<100000;count++) counter=count;
-  49                             		.loc 1 36 0
+  34:../src/main.c **** 		for (count=0; count<100000;count++);
+  49                             		.loc 1 34 0
   50 0010 F6                      		clrw	ax
-  51 0011 B8 20                   		movw	[sp+32], ax
+  51 0011 B8 18                   		movw	[sp+24], ax
   52 0013 F6                      		clrw	ax
-  53 0014 B8 22                   		movw	[sp+34], ax
-  54 0016 A8 20                   		movw	ax, [sp+32]
-  55 0018 B8 0C                   		movw	[sp+12], ax
-  56 001a A8 22                   		movw	ax, [sp+34]
-  57 001c B8 0E                   		movw	[sp+14], ax
-  58 001e A8 0E                   		movw	ax, [sp+14]
+  53 0014 B8 1A                   		movw	[sp+26], ax
+  54 0016 A8 18                   		movw	ax, [sp+24]
+  55 0018 B8 04                   		movw	[sp+4], ax
+  56 001a A8 1A                   		movw	ax, [sp+26]
+  57 001c B8 06                   		movw	[sp+6], ax
+  58 001e A8 06                   		movw	ax, [sp+6]
   59 0020 44 01 00                		 cmpw	ax, #1
-  60 0023 A8 0C                   		 movw	ax, [sp+12]
+  60 0023 A8 04                   		 movw	ax, [sp+4]
   61 0025 61 F8                   		 sknz
   62 0027 44 9F 86                		 cmpw	ax, #34463
   63 002a 61 F3                   		 sknh
-  64 002c EC 7A 00 00             		 br	!!.L5
+  64 002c EC 68 00 00             		 br	!!.L5
   65                             	.L8:
-  66                             		.loc 1 36 0 is_stmt 0 discriminator 3
-  67 0030 A8 20                   		movw	ax, [sp+32]
-  68 0032 BD F0                   		movw	r8, ax
-  69 0034 A8 22                   		movw	ax, [sp+34]
-  70 0036 BD F2                   		movw	r10, ax
-  71 0038 AD F0                   		movw	ax, r8
-  72 003a BF 00 00                		movw	!_counter, ax
-  73 003d AD F2                   		movw	ax, r10
-  74 003f BF 00 00                		movw	!_counter+2, ax
-  75 0042 A8 20                   		movw	ax, [sp+32]
-  76 0044 BD F4                   		movw	r12, ax
-  77 0046 A8 22                   		movw	ax, [sp+34]
-  78 0048 BD F6                   		movw	r14, ax
-  79 004a AD F4                   		movw ax, r12
-  80 004c 04 01 00                		addw ax, #1
-  81 004f BD E8                   		movw r16, ax
-  82 0051 AD F6                   		movw ax, r14
-  83 0053 61 D8                   		sknc
-  84 0055 A1                      		incw ax
-  85 0056 BD EA                   		movw r18,ax
-  86 0058 AD E8                   		movw	ax, r16
-  87 005a B8 20                   		movw	[sp+32], ax
-  88 005c AD EA                   		movw	ax, r18
-  89 005e B8 22                   		movw	[sp+34], ax
-  90 0060 A8 20                   		movw	ax, [sp+32]
-  91 0062 B8 00                   		movw	[sp], ax
-  92 0064 A8 22                   		movw	ax, [sp+34]
-  93 0066 B8 02                   		movw	[sp+2], ax
-  94 0068 A8 02                   		movw	ax, [sp+2]
-  95 006a 44 01 00                		 cmpw	ax, #1
-  96 006d A8 00                   		 movw	ax, [sp]
-  97 006f 61 F8                   		 sknz
-  98 0071 44 9F 86                		 cmpw	ax, #34463
-  99 0074 61 E3                   		 skh
- 100 0076 EC 30 00 00             		 br	!!.L8
- 101                             	.L5:
-  37:../src/main.c **** 		LED = 1;
- 102                             		.loc 1 37 0 is_stmt 1
- 103 007a 71 30 06 FF             		set1	!-250.3
-  38:../src/main.c **** 		for (count=0; count<100000;count++) counter=count;
- 104                             		.loc 1 38 0
- 105 007e F6                      		clrw	ax
- 106 007f B8 20                   		movw	[sp+32], ax
- 107 0081 F6                      		clrw	ax
- 108 0082 B8 22                   		movw	[sp+34], ax
- 109 0084 A8 20                   		movw	ax, [sp+32]
- 110 0086 B8 08                   		movw	[sp+8], ax
- 111 0088 A8 22                   		movw	ax, [sp+34]
- 112 008a B8 0A                   		movw	[sp+10], ax
- 113 008c A8 0A                   		movw	ax, [sp+10]
- 114 008e 44 01 00                		 cmpw	ax, #1
- 115 0091 A8 08                   		 movw	ax, [sp+8]
- 116 0093 61 F8                   		 sknz
- 117 0095 44 9F 86                		 cmpw	ax, #34463
- 118 0098 61 F3                   		 sknh
- 119 009a EC 0C 00 00             		 br	!!.L6
- 120 009e AD F0                   		movw	ax, r8
- 121 00a0 B8 18                   		movw	[sp+24], ax
- 122 00a2 AD F2                   		movw	ax, r10
- 123 00a4 B8 1A                   		movw	[sp+26], ax
- 124 00a6 AD F4                   		movw	ax, r12
- 125 00a8 B8 1C                   		movw	[sp+28], ax
- 126 00aa AD F6                   		movw	ax, r14
- 127 00ac B8 1E                   		movw	[sp+30], ax
- 128                             	.L7:
- 129                             		.loc 1 38 0 is_stmt 0 discriminator 3
- 130 00ae A8 20                   		movw	ax, [sp+32]
- 131 00b0 BD F0                   		movw	r8, ax
- 132 00b2 A8 22                   		movw	ax, [sp+34]
- 133 00b4 BD F2                   		movw	r10, ax
- 134 00b6 AD F0                   		movw	ax, r8
- 135 00b8 BF 00 00                		movw	!_counter, ax
- 136 00bb AD F2                   		movw	ax, r10
- 137 00bd BF 00 00                		movw	!_counter+2, ax
- 138 00c0 A8 20                   		movw	ax, [sp+32]
- 139 00c2 BD F4                   		movw	r12, ax
- 140 00c4 A8 22                   		movw	ax, [sp+34]
- 141 00c6 BD F6                   		movw	r14, ax
- 142 00c8 AD F4                   		movw ax, r12
- 143 00ca 04 01 00                		addw ax, #1
- 144 00cd BD E8                   		movw r16, ax
- 145 00cf AD F6                   		movw ax, r14
- 146 00d1 61 D8                   		sknc
- 147 00d3 A1                      		incw ax
- 148 00d4 BD EA                   		movw r18,ax
- 149 00d6 AD E8                   		movw	ax, r16
- 150 00d8 B8 20                   		movw	[sp+32], ax
- 151 00da AD EA                   		movw	ax, r18
- 152 00dc B8 22                   		movw	[sp+34], ax
- 153 00de A8 20                   		movw	ax, [sp+32]
- 154 00e0 B8 04                   		movw	[sp+4], ax
- 155 00e2 A8 22                   		movw	ax, [sp+34]
- 156 00e4 B8 06                   		movw	[sp+6], ax
- 157 00e6 A8 06                   		movw	ax, [sp+6]
- 158 00e8 44 01 00                		 cmpw	ax, #1
- 159 00eb A8 04                   		 movw	ax, [sp+4]
- 160 00ed 61 F8                   		 sknz
- 161 00ef 44 9F 86                		 cmpw	ax, #34463
- 162 00f2 61 E3                   		 skh
- 163 00f4 EC AE 00 00             		 br	!!.L7
- 164 00f8 AD F0                   		movw	ax, r8
- 165 00fa B8 10                   		movw	[sp+16], ax
- 166 00fc AD F2                   		movw	ax, r10
- 167 00fe B8 12                   		movw	[sp+18], ax
- 168 0100 AD F4                   		movw	ax, r12
- 169 0102 B8 14                   		movw	[sp+20], ax
- 170 0104 AD F6                   		movw	ax, r14
- 171 0106 B8 16                   		movw	[sp+22], ax
- 172 0108 A8 18                   		movw	ax, [sp+24]
- 173 010a BD F0                   		movw	r8, ax
- 174 010c A8 1A                   		movw	ax, [sp+26]
- 175 010e BD F2                   		movw	r10, ax
- 176 0110 A8 1C                   		movw	ax, [sp+28]
- 177 0112 BD F4                   		movw	r12, ax
- 178 0114 A8 1E                   		movw	ax, [sp+30]
- 179 0116 BD F6                   		movw	r14, ax
- 180 0118 EC 0C 00 00             		br	!!.L6
- 181                             	.LFE0:
- 183                             		.section	.rodata
- 184                             	.LC0:
- 185 0000 54 65 73 74 69 6E 67 00 		.string	"Testing"
- 186                             	.text
- 187                             		.global	_task2
- 189                             	_task2:
- 190                             	.LFB1:
-  39:../src/main.c **** 	}
-  40:../src/main.c **** }
-  41:../src/main.c **** 
-  42:../src/main.c **** void task2(void){
- 191                             		.loc 1 42 0 is_stmt 1
- 192                             		; start of function
- 193                             		; push 4: r16 r18
- 194                             		; locals: 14 bytes
- 195                             		; outgoing: 4 bytes
- 196 011c 61 EF                   		sel	rb2
- 197 011e C1                      		push	ax ; r16
- 198                             	.LCFI3:
- 199 011f C3                      		push	bc ; r18
- 200                             	.LCFI4:
- 201 0120 61 CF                   		sel	rb0
- 202 0122 20 12                   		subw	sp, #18
- 203                             	.LCFI5:
-  43:../src/main.c **** 	volatile unsigned char aux;
-  44:../src/main.c **** 	volatile unsigned long temp;
-  45:../src/main.c **** 	LCD_init(DISPLAY_8x5|_2LINES,DISPLAY_ON|CURSOR_OFF|CURSOR_FIXED);
- 204                             		.loc 1 45 0
- 205 0124 51 08                   		mov	a, #8
- 206 0126 98 00                   		mov	[sp], a
- 207 0128 51 04                   		mov	a, #4
- 208 012a 98 02                   		mov	[sp+2], a
- 209 012c 8D F0                   		mov	a, r8
- 210 012e 98 07                   		mov	[sp+7], a
- 211 0130 8D F1                   		mov	a, r9
- 212 0132 98 06                   		mov	[sp+6], a
- 213 0134 8D F2                   		mov	a, r10
- 214 0136 98 05                   		mov	[sp+5], a
- 215 0138 8D F3                   		mov	a, r11
- 216 013a 98 04                   		mov	[sp+4], a
- 217 013c FC 00 00 00             		call	!!%code(_LCD_init)
- 218                             	.LVL0:
- 219 0140 88 07                   		mov	a, [sp+7]
- 220 0142 9D F0                   		mov	r8, a
- 221 0144 88 06                   		mov	a, [sp+6]
- 222 0146 9D F1                   		mov	r9, a
- 223 0148 88 05                   		mov	a, [sp+5]
- 224 014a 9D F2                   		mov	r10, a
- 225 014c 88 04                   		mov	a, [sp+4]
- 226 014e 9D F3                   		mov	r11, a
- 227                             	.L16:
-  46:../src/main.c **** 	while (1){
-  47:../src/main.c **** 		LCD_write_char('\f');   // apaga o display
- 228                             		.loc 1 47 0
- 229 0150 51 0C                   		mov	a, #12
- 230 0152 98 00                   		mov	[sp], a
- 231 0154 8D F0                   		mov	a, r8
- 232 0156 98 07                   		mov	[sp+7], a
- 233 0158 8D F1                   		mov	a, r9
- 234 015a 98 06                   		mov	[sp+6], a
- 235 015c 8D F2                   		mov	a, r10
- 236 015e 98 05                   		mov	[sp+5], a
- 237 0160 8D F3                   		mov	a, r11
- 238 0162 98 04                   		mov	[sp+4], a
- 239 0164 FC 00 00 00             		call	!!%code(_LCD_write_char)
- 240                             	.LVL1:
-  48:../src/main.c **** 		LCD_pos_xy(0,0);
- 241                             		.loc 1 48 0
- 242 0168 F1                      		clrb	a
- 243 0169 98 00                   		mov	[sp], a
- 244 016b F1                      		clrb	a
- 245 016c 98 02                   		mov	[sp+2], a
- 246 016e FC 00 00 00             		call	!!%code(_LCD_pos_xy)
- 247                             	.LVL2:
-  49:../src/main.c **** 		LCD_write_string("Testing");
- 248                             		.loc 1 49 0
- 249 0172 30 00 00                		movw	ax, #.LC0
- 250 0175 B8 00                   		movw	[sp], ax
- 251 0177 FC 00 00 00             		call	!!%code(_LCD_write_string)
- 252                             	.LVL3:
-  50:../src/main.c **** 		for (aux=0;aux<100;aux++){
- 253                             		.loc 1 50 0
- 254 017b F1                      		clrb	a
- 255 017c 98 0D                   		mov	[sp+13], a
- 256 017e 88 07                   		mov	a, [sp+7]
- 257 0180 9D F0                   		mov	r8, a
- 258 0182 88 06                   		mov	a, [sp+6]
- 259 0184 9D F1                   		mov	r9, a
- 260 0186 88 05                   		mov	a, [sp+5]
- 261 0188 9D F2                   		mov	r10, a
- 262 018a 88 04                   		mov	a, [sp+4]
- 263 018c 9D F3                   		mov	r11, a
- 264 018e 88 0D                   		mov	a, [sp+13]
- 265 0190 4C 63                   		cmp	a, #99
- 266 0192 61 F3                   		 sknh
- 267 0194 EC 50 01 00             		 br	!!.L16
- 268                             	.L20:
-  51:../src/main.c **** 			LCD_pos_xy(0,1);
- 269                             		.loc 1 51 0
- 270 0198 F1                      		clrb	a
- 271 0199 98 00                   		mov	[sp], a
- 272 019b E1                      		oneb	a
- 273 019c 98 02                   		mov	[sp+2], a
- 274 019e 8D F0                   		mov	a, r8
- 275 01a0 98 07                   		mov	[sp+7], a
- 276 01a2 8D F1                   		mov	a, r9
- 277 01a4 98 06                   		mov	[sp+6], a
- 278 01a6 8D F2                   		mov	a, r10
- 279 01a8 98 05                   		mov	[sp+5], a
- 280 01aa 8D F3                   		mov	a, r11
- 281 01ac 98 04                   		mov	[sp+4], a
- 282 01ae FC 00 00 00             		call	!!%code(_LCD_pos_xy)
- 283                             	.LVL4:
-  52:../src/main.c **** 			LCD_print_char(aux);
- 284                             		.loc 1 52 0
- 285 01b2 88 0D                   		mov	a, [sp+13]
- 286 01b4 98 00                   		mov	[sp], a
- 287 01b6 FC 00 00 00             		call	!!%code(_LCD_print_char)
- 288                             	.LVL5:
-  53:../src/main.c **** 			for (temp=0;temp<500000;temp++);
- 289                             		.loc 1 53 0
- 290 01ba F6                      		clrw	ax
- 291 01bb B8 0E                   		movw	[sp+14], ax
- 292 01bd F6                      		clrw	ax
- 293 01be B8 10                   		movw	[sp+16], ax
- 294 01c0 A8 0E                   		movw	ax, [sp+14]
- 295 01c2 B8 08                   		movw	[sp+8], ax
- 296 01c4 A8 10                   		movw	ax, [sp+16]
- 297 01c6 B8 0A                   		movw	[sp+10], ax
- 298 01c8 88 07                   		mov	a, [sp+7]
- 299 01ca 9D F0                   		mov	r8, a
- 300 01cc 88 06                   		mov	a, [sp+6]
- 301 01ce 9D F1                   		mov	r9, a
- 302 01d0 88 05                   		mov	a, [sp+5]
- 303 01d2 9D F2                   		mov	r10, a
- 304 01d4 88 04                   		mov	a, [sp+4]
- 305 01d6 9D F3                   		mov	r11, a
- 306 01d8 A8 0A                   		movw	ax, [sp+10]
- 307 01da 44 07 00                		 cmpw	ax, #7
- 308 01dd A8 08                   		 movw	ax, [sp+8]
- 309 01df 61 F8                   		 sknz
- 310 01e1 44 1F A1                		 cmpw	ax, #41247
- 311 01e4 61 F3                   		 sknh
- 312 01e6 EC 22 02 00             		 br	!!.L19
- 313                             	.L21:
- 314                             		.loc 1 53 0 is_stmt 0 discriminator 3
- 315 01ea A8 0E                   		movw	ax, [sp+14]
- 316 01ec BD F0                   		movw	r8, ax
- 317 01ee A8 10                   		movw	ax, [sp+16]
- 318 01f0 BD F2                   		movw	r10, ax
- 319 01f2 AD F0                   		movw ax, r8
- 320 01f4 04 01 00                		addw ax, #1
- 321 01f7 BD F4                   		movw r12, ax
- 322 01f9 AD F2                   		movw ax, r10
- 323 01fb 61 D8                   		sknc
- 324 01fd A1                      		incw ax
- 325 01fe BD F6                   		movw r14,ax
- 326 0200 AD F4                   		movw	ax, r12
- 327 0202 B8 0E                   		movw	[sp+14], ax
- 328 0204 AD F6                   		movw	ax, r14
- 329 0206 B8 10                   		movw	[sp+16], ax
- 330 0208 A8 0E                   		movw	ax, [sp+14]
- 331 020a BD E8                   		movw	r16, ax
- 332 020c A8 10                   		movw	ax, [sp+16]
- 333 020e BD EA                   		movw	r18, ax
- 334 0210 AD EA                   		movw	ax, r18
- 335 0212 44 07 00                		 cmpw	ax, #7
- 336 0215 AD E8                   		 movw	ax, r16
- 337 0217 61 F8                   		 sknz
- 338 0219 44 1F A1                		 cmpw	ax, #41247
- 339 021c 61 E3                   		 skh
- 340 021e EC EA 01 00             		 br	!!.L21
- 341                             	.L19:
-  50:../src/main.c **** 			LCD_pos_xy(0,1);
- 342                             		.loc 1 50 0 is_stmt 1
- 343 0222 FB F8 FF                		movw	hl, sp
- 344 0225 61 59 0D                		inc	[hl+13]
- 345 0228 88 0D                   		mov	a, [sp+13]
- 346 022a 4C 63                   		cmp	a, #99
- 347 022c 61 E3                   		 skh
- 348 022e EC 98 01 00             		 br	!!.L20
- 349 0232 EC 50 01 00             		br	!!.L16
- 350                             	.LFE1:
- 352                             		.section	.text.startup,"ax",@progbits
- 353                             		.global	_main
- 355                             	_main:
- 356                             	.LFB2:
-  54:../src/main.c **** 		}
-  55:../src/main.c **** 	}
-  56:../src/main.c **** }
-  57:../src/main.c **** 
-  58:../src/main.c **** void main(void){
- 357                             		.loc 1 58 0
- 358                             		; start of function
- 359                             		; outgoing: 2 bytes
- 360 0000 20 02                   		subw	sp, #2
- 361                             	.LCFI6:
-  59:../src/main.c **** 	ULWOS_TASKHANDLER tk1 = ulwos_create_task(&task1);
- 362                             		.loc 1 59 0
- 363 0002 30 00 00                		movw	ax, #%code(_task1)
- 364 0005 B8 00                   		movw	[sp], ax
- 365 0007 FC 00 00 00             		call	!!%code(_ulwos_create_task)
- 366                             	.LVL6:
-  60:../src/main.c **** 	ULWOS_TASKHANDLER tk2 = ulwos_create_task(&task2);
- 367                             		.loc 1 60 0
- 368 000b 30 1C 01                		movw	ax, #%code(_task2)
- 369 000e B8 00                   		movw	[sp], ax
- 370 0010 FC 00 00 00             		call	!!%code(_ulwos_create_task)
- 371                             	.LVL7:
-  61:../src/main.c **** 	ulwos_start();
- 372                             		.loc 1 61 0
- 373 0014 FC 00 00 00             		call	!!%code(_ulwos_start)
- 374                             	.LVL8:
- 375                             	.L26:
-  62:../src/main.c **** 	// the following code is never executed!!! It is here "just in case" ;)
-  63:../src/main.c **** 	while (1){
-  64:../src/main.c **** 	}
- 376                             		.loc 1 64 0 discriminator 1
- 377 0018 EC 18 00 00             		br	!!.L26
- 378                             	.LFE2:
- 380                             		.comm	_counter,4,2
- 451                             	.Letext0:
- 452                             		.file 2 "../src/iodefine.h"
- 453                             		.file 3 "../src/ulwos.h"
- 454                             		.file 4 "../src/lcd_8x2.h"
+  66                             		.loc 1 34 0 is_stmt 0 discriminator 3
+  67 0030 A8 18                   		movw	ax, [sp+24]
+  68 0032 BD F4                   		movw	r12, ax
+  69 0034 A8 1A                   		movw	ax, [sp+26]
+  70 0036 BD F6                   		movw	r14, ax
+  71 0038 AD F4                   		movw ax, r12
+  72 003a 04 01 00                		addw ax, #1
+  73 003d BD E8                   		movw r16, ax
+  74 003f AD F6                   		movw ax, r14
+  75 0041 61 D8                   		sknc
+  76 0043 A1                      		incw ax
+  77 0044 BD EA                   		movw r18,ax
+  78 0046 AD E8                   		movw	ax, r16
+  79 0048 B8 18                   		movw	[sp+24], ax
+  80 004a AD EA                   		movw	ax, r18
+  81 004c B8 1A                   		movw	[sp+26], ax
+  82 004e A8 18                   		movw	ax, [sp+24]
+  83 0050 BD F0                   		movw	r8, ax
+  84 0052 A8 1A                   		movw	ax, [sp+26]
+  85 0054 BD F2                   		movw	r10, ax
+  86 0056 AD F2                   		movw	ax, r10
+  87 0058 44 01 00                		 cmpw	ax, #1
+  88 005b AD F0                   		 movw	ax, r8
+  89 005d 61 F8                   		 sknz
+  90 005f 44 9F 86                		 cmpw	ax, #34463
+  91 0062 61 E3                   		 skh
+  92 0064 EC 30 00 00             		 br	!!.L8
+  93                             	.L5:
+  35:../src/main.c **** 		LED = 1;
+  94                             		.loc 1 35 0 is_stmt 1
+  95 0068 71 30 06 FF             		set1	!-250.3
+  36:../src/main.c **** 		for (count=0; count<100000;count++);
+  96                             		.loc 1 36 0
+  97 006c F6                      		clrw	ax
+  98 006d B8 18                   		movw	[sp+24], ax
+  99 006f F6                      		clrw	ax
+ 100 0070 B8 1A                   		movw	[sp+26], ax
+ 101 0072 A8 18                   		movw	ax, [sp+24]
+ 102 0074 B8 00                   		movw	[sp], ax
+ 103 0076 A8 1A                   		movw	ax, [sp+26]
+ 104 0078 B8 02                   		movw	[sp+2], ax
+ 105 007a A8 02                   		movw	ax, [sp+2]
+ 106 007c 44 01 00                		 cmpw	ax, #1
+ 107 007f A8 00                   		 movw	ax, [sp]
+ 108 0081 61 F8                   		 sknz
+ 109 0083 44 9F 86                		 cmpw	ax, #34463
+ 110 0086 61 F3                   		 sknh
+ 111 0088 EC 0C 00 00             		 br	!!.L6
+ 112 008c AD F0                   		movw	ax, r8
+ 113 008e B8 10                   		movw	[sp+16], ax
+ 114 0090 AD F2                   		movw	ax, r10
+ 115 0092 B8 12                   		movw	[sp+18], ax
+ 116 0094 AD F4                   		movw	ax, r12
+ 117 0096 B8 14                   		movw	[sp+20], ax
+ 118 0098 AD F6                   		movw	ax, r14
+ 119 009a B8 16                   		movw	[sp+22], ax
+ 120                             	.L7:
+ 121                             		.loc 1 36 0 is_stmt 0 discriminator 3
+ 122 009c A8 18                   		movw	ax, [sp+24]
+ 123 009e BD F4                   		movw	r12, ax
+ 124 00a0 A8 1A                   		movw	ax, [sp+26]
+ 125 00a2 BD F6                   		movw	r14, ax
+ 126 00a4 AD F4                   		movw ax, r12
+ 127 00a6 04 01 00                		addw ax, #1
+ 128 00a9 BD E8                   		movw r16, ax
+ 129 00ab AD F6                   		movw ax, r14
+ 130 00ad 61 D8                   		sknc
+ 131 00af A1                      		incw ax
+ 132 00b0 BD EA                   		movw r18,ax
+ 133 00b2 AD E8                   		movw	ax, r16
+ 134 00b4 B8 18                   		movw	[sp+24], ax
+ 135 00b6 AD EA                   		movw	ax, r18
+ 136 00b8 B8 1A                   		movw	[sp+26], ax
+ 137 00ba A8 18                   		movw	ax, [sp+24]
+ 138 00bc BD F0                   		movw	r8, ax
+ 139 00be A8 1A                   		movw	ax, [sp+26]
+ 140 00c0 BD F2                   		movw	r10, ax
+ 141 00c2 AD F2                   		movw	ax, r10
+ 142 00c4 44 01 00                		 cmpw	ax, #1
+ 143 00c7 AD F0                   		 movw	ax, r8
+ 144 00c9 61 F8                   		 sknz
+ 145 00cb 44 9F 86                		 cmpw	ax, #34463
+ 146 00ce 61 E3                   		 skh
+ 147 00d0 EC 9C 00 00             		 br	!!.L7
+ 148 00d4 AD F0                   		movw	ax, r8
+ 149 00d6 B8 08                   		movw	[sp+8], ax
+ 150 00d8 AD F2                   		movw	ax, r10
+ 151 00da B8 0A                   		movw	[sp+10], ax
+ 152 00dc A8 10                   		movw	ax, [sp+16]
+ 153 00de BD F0                   		movw	r8, ax
+ 154 00e0 A8 12                   		movw	ax, [sp+18]
+ 155 00e2 BD F2                   		movw	r10, ax
+ 156 00e4 AD F4                   		movw	ax, r12
+ 157 00e6 B8 0C                   		movw	[sp+12], ax
+ 158 00e8 AD F6                   		movw	ax, r14
+ 159 00ea B8 0E                   		movw	[sp+14], ax
+ 160 00ec A8 14                   		movw	ax, [sp+20]
+ 161 00ee BD F4                   		movw	r12, ax
+ 162 00f0 A8 16                   		movw	ax, [sp+22]
+ 163 00f2 BD F6                   		movw	r14, ax
+ 164 00f4 EC 0C 00 00             		br	!!.L6
+ 165                             	.LFE0:
+ 167                             		.section	.rodata
+ 168                             	.LC0:
+ 169 0000 54 65 73 74 69 6E 67 00 		.string	"Testing"
+ 170                             	.text
+ 171                             		.global	_task2
+ 173                             	_task2:
+ 174                             	.LFB1:
+  37:../src/main.c **** 	}
+  38:../src/main.c **** }
+  39:../src/main.c **** 
+  40:../src/main.c **** void __attribute__ ((noreturn)) task2(void){
+ 175                             		.loc 1 40 0 is_stmt 1
+ 176                             		; start of function
+ 177                             		; push 4: r16 r18
+ 178                             		; locals: 14 bytes
+ 179                             		; outgoing: 4 bytes
+ 180 00f8 61 EF                   		sel	rb2
+ 181 00fa C1                      		push	ax ; r16
+ 182                             	.LCFI3:
+ 183 00fb C3                      		push	bc ; r18
+ 184                             	.LCFI4:
+ 185 00fc 61 CF                   		sel	rb0
+ 186 00fe 20 12                   		subw	sp, #18
+ 187                             	.LCFI5:
+  41:../src/main.c **** 	volatile unsigned char aux;
+  42:../src/main.c **** 	volatile unsigned long temp;
+  43:../src/main.c **** 	LCD_init(DISPLAY_8x5|_2LINES,DISPLAY_ON|CURSOR_OFF|CURSOR_FIXED);
+ 188                             		.loc 1 43 0
+ 189 0100 51 08                   		mov	a, #8
+ 190 0102 98 00                   		mov	[sp], a
+ 191 0104 51 04                   		mov	a, #4
+ 192 0106 98 02                   		mov	[sp+2], a
+ 193 0108 8D F0                   		mov	a, r8
+ 194 010a 98 07                   		mov	[sp+7], a
+ 195 010c 8D F1                   		mov	a, r9
+ 196 010e 98 06                   		mov	[sp+6], a
+ 197 0110 8D F2                   		mov	a, r10
+ 198 0112 98 05                   		mov	[sp+5], a
+ 199 0114 8D F3                   		mov	a, r11
+ 200 0116 98 04                   		mov	[sp+4], a
+ 201 0118 FC 00 00 00             		call	!!%code(_LCD_init)
+ 202                             	.LVL0:
+ 203 011c 88 07                   		mov	a, [sp+7]
+ 204 011e 9D F0                   		mov	r8, a
+ 205 0120 88 06                   		mov	a, [sp+6]
+ 206 0122 9D F1                   		mov	r9, a
+ 207 0124 88 05                   		mov	a, [sp+5]
+ 208 0126 9D F2                   		mov	r10, a
+ 209 0128 88 04                   		mov	a, [sp+4]
+ 210 012a 9D F3                   		mov	r11, a
+ 211                             	.L16:
+  44:../src/main.c **** 	while (1){
+  45:../src/main.c **** 		LCD_write_char('\f');   // apaga o display
+ 212                             		.loc 1 45 0
+ 213 012c 51 0C                   		mov	a, #12
+ 214 012e 98 00                   		mov	[sp], a
+ 215 0130 8D F0                   		mov	a, r8
+ 216 0132 98 07                   		mov	[sp+7], a
+ 217 0134 8D F1                   		mov	a, r9
+ 218 0136 98 06                   		mov	[sp+6], a
+ 219 0138 8D F2                   		mov	a, r10
+ 220 013a 98 05                   		mov	[sp+5], a
+ 221 013c 8D F3                   		mov	a, r11
+ 222 013e 98 04                   		mov	[sp+4], a
+ 223 0140 FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 224                             	.LVL1:
+  46:../src/main.c **** 		LCD_pos_xy(0,0);
+ 225                             		.loc 1 46 0
+ 226 0144 F1                      		clrb	a
+ 227 0145 98 00                   		mov	[sp], a
+ 228 0147 F1                      		clrb	a
+ 229 0148 98 02                   		mov	[sp+2], a
+ 230 014a FC 00 00 00             		call	!!%code(_LCD_pos_xy)
+ 231                             	.LVL2:
+  47:../src/main.c **** 		LCD_write_string("Testing");
+ 232                             		.loc 1 47 0
+ 233 014e 30 00 00                		movw	ax, #.LC0
+ 234 0151 B8 00                   		movw	[sp], ax
+ 235 0153 FC 00 00 00             		call	!!%code(_LCD_write_string)
+ 236                             	.LVL3:
+  48:../src/main.c **** 		for (aux=0;aux<100;aux++){
+ 237                             		.loc 1 48 0
+ 238 0157 F1                      		clrb	a
+ 239 0158 98 0D                   		mov	[sp+13], a
+ 240 015a 88 07                   		mov	a, [sp+7]
+ 241 015c 9D F0                   		mov	r8, a
+ 242 015e 88 06                   		mov	a, [sp+6]
+ 243 0160 9D F1                   		mov	r9, a
+ 244 0162 88 05                   		mov	a, [sp+5]
+ 245 0164 9D F2                   		mov	r10, a
+ 246 0166 88 04                   		mov	a, [sp+4]
+ 247 0168 9D F3                   		mov	r11, a
+ 248 016a 88 0D                   		mov	a, [sp+13]
+ 249 016c 4C 63                   		cmp	a, #99
+ 250 016e 61 F3                   		 sknh
+ 251 0170 EC 2C 01 00             		 br	!!.L16
+ 252                             	.L20:
+  49:../src/main.c **** 			LCD_pos_xy(0,1);
+ 253                             		.loc 1 49 0
+ 254 0174 F1                      		clrb	a
+ 255 0175 98 00                   		mov	[sp], a
+ 256 0177 E1                      		oneb	a
+ 257 0178 98 02                   		mov	[sp+2], a
+ 258 017a 8D F0                   		mov	a, r8
+ 259 017c 98 07                   		mov	[sp+7], a
+ 260 017e 8D F1                   		mov	a, r9
+ 261 0180 98 06                   		mov	[sp+6], a
+ 262 0182 8D F2                   		mov	a, r10
+ 263 0184 98 05                   		mov	[sp+5], a
+ 264 0186 8D F3                   		mov	a, r11
+ 265 0188 98 04                   		mov	[sp+4], a
+ 266 018a FC 00 00 00             		call	!!%code(_LCD_pos_xy)
+ 267                             	.LVL4:
+  50:../src/main.c **** 			LCD_print_char(aux);
+ 268                             		.loc 1 50 0
+ 269 018e 88 0D                   		mov	a, [sp+13]
+ 270 0190 98 00                   		mov	[sp], a
+ 271 0192 FC 00 00 00             		call	!!%code(_LCD_print_char)
+ 272                             	.LVL5:
+  51:../src/main.c **** 			for (temp=0;temp<500000;temp++);
+ 273                             		.loc 1 51 0
+ 274 0196 F6                      		clrw	ax
+ 275 0197 B8 0E                   		movw	[sp+14], ax
+ 276 0199 F6                      		clrw	ax
+ 277 019a B8 10                   		movw	[sp+16], ax
+ 278 019c A8 0E                   		movw	ax, [sp+14]
+ 279 019e B8 08                   		movw	[sp+8], ax
+ 280 01a0 A8 10                   		movw	ax, [sp+16]
+ 281 01a2 B8 0A                   		movw	[sp+10], ax
+ 282 01a4 88 07                   		mov	a, [sp+7]
+ 283 01a6 9D F0                   		mov	r8, a
+ 284 01a8 88 06                   		mov	a, [sp+6]
+ 285 01aa 9D F1                   		mov	r9, a
+ 286 01ac 88 05                   		mov	a, [sp+5]
+ 287 01ae 9D F2                   		mov	r10, a
+ 288 01b0 88 04                   		mov	a, [sp+4]
+ 289 01b2 9D F3                   		mov	r11, a
+ 290 01b4 A8 0A                   		movw	ax, [sp+10]
+ 291 01b6 44 07 00                		 cmpw	ax, #7
+ 292 01b9 A8 08                   		 movw	ax, [sp+8]
+ 293 01bb 61 F8                   		 sknz
+ 294 01bd 44 1F A1                		 cmpw	ax, #41247
+ 295 01c0 61 F3                   		 sknh
+ 296 01c2 EC FE 01 00             		 br	!!.L19
+ 297                             	.L21:
+ 298                             		.loc 1 51 0 is_stmt 0 discriminator 3
+ 299 01c6 A8 0E                   		movw	ax, [sp+14]
+ 300 01c8 BD F0                   		movw	r8, ax
+ 301 01ca A8 10                   		movw	ax, [sp+16]
+ 302 01cc BD F2                   		movw	r10, ax
+ 303 01ce AD F0                   		movw ax, r8
+ 304 01d0 04 01 00                		addw ax, #1
+ 305 01d3 BD F4                   		movw r12, ax
+ 306 01d5 AD F2                   		movw ax, r10
+ 307 01d7 61 D8                   		sknc
+ 308 01d9 A1                      		incw ax
+ 309 01da BD F6                   		movw r14,ax
+ 310 01dc AD F4                   		movw	ax, r12
+ 311 01de B8 0E                   		movw	[sp+14], ax
+ 312 01e0 AD F6                   		movw	ax, r14
+ 313 01e2 B8 10                   		movw	[sp+16], ax
+ 314 01e4 A8 0E                   		movw	ax, [sp+14]
+ 315 01e6 BD E8                   		movw	r16, ax
+ 316 01e8 A8 10                   		movw	ax, [sp+16]
+ 317 01ea BD EA                   		movw	r18, ax
+ 318 01ec AD EA                   		movw	ax, r18
+ 319 01ee 44 07 00                		 cmpw	ax, #7
+ 320 01f1 AD E8                   		 movw	ax, r16
+ 321 01f3 61 F8                   		 sknz
+ 322 01f5 44 1F A1                		 cmpw	ax, #41247
+ 323 01f8 61 E3                   		 skh
+ 324 01fa EC C6 01 00             		 br	!!.L21
+ 325                             	.L19:
+  48:../src/main.c **** 			LCD_pos_xy(0,1);
+ 326                             		.loc 1 48 0 is_stmt 1
+ 327 01fe FB F8 FF                		movw	hl, sp
+ 328 0201 61 59 0D                		inc	[hl+13]
+ 329 0204 88 0D                   		mov	a, [sp+13]
+ 330 0206 4C 63                   		cmp	a, #99
+ 331 0208 61 E3                   		 skh
+ 332 020a EC 74 01 00             		 br	!!.L20
+ 333 020e EC 2C 01 00             		br	!!.L16
+ 334                             	.LFE1:
+ 336                             		.section	.text.startup,"ax",@progbits
+ 337                             		.global	_main
+ 339                             	_main:
+ 340                             	.LFB2:
+  52:../src/main.c **** 		}
+  53:../src/main.c **** 	}
+  54:../src/main.c **** }
+  55:../src/main.c **** 
+  56:../src/main.c **** void main(void){
+ 341                             		.loc 1 56 0
+ 342                             		; start of function
+ 343                             		; outgoing: 2 bytes
+ 344 0000 20 02                   		subw	sp, #2
+ 345                             	.LCFI6:
+  57:../src/main.c **** 	ULWOS_TASKHANDLER tk1 = ulwos_create_task(&task1);
+ 346                             		.loc 1 57 0
+ 347 0002 30 00 00                		movw	ax, #%code(_task1)
+ 348 0005 B8 00                   		movw	[sp], ax
+ 349 0007 FC 00 00 00             		call	!!%code(_ulwos_create_task)
+ 350                             	.LVL6:
+  58:../src/main.c **** 	ULWOS_TASKHANDLER tk2 = ulwos_create_task(&task2);
+ 351                             		.loc 1 58 0
+ 352 000b 30 F8 00                		movw	ax, #%code(_task2)
+ 353 000e B8 00                   		movw	[sp], ax
+ 354 0010 FC 00 00 00             		call	!!%code(_ulwos_create_task)
+ 355                             	.LVL7:
+  59:../src/main.c **** 	ulwos_start();
+ 356                             		.loc 1 59 0
+ 357 0014 FC 00 00 00             		call	!!%code(_ulwos_start)
+ 358                             	.LVL8:
+ 359                             	.L26:
+  60:../src/main.c **** 	// the following code is never reached!!! It is here "just in case" ;)
+  61:../src/main.c **** 	while (1){
+  62:../src/main.c **** 	}
+ 360                             		.loc 1 62 0 discriminator 1
+ 361 0018 EC 18 00 00             		br	!!.L26
+ 362                             	.LFE2:
+ 434                             	.Letext0:
+ 435                             		.file 2 "../src/iodefine.h"
+ 436                             		.file 3 "../src/ulwos.h"
+ 437                             		.file 4 "../src/lcd_8x2.h"

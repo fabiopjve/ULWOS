@@ -2,7 +2,7 @@
 Allocating common symbols
 Common symbol       size              file
 
-task_stack          0x400             ./src/ulwos.o
+ulwos_task_stack    0x200             ./src/ulwos.o
 
 Memory Configuration
 
@@ -61,7 +61,7 @@ Linker script and memory map
                 0x000000d8                __DTOR_END__ = .
                 0x000000d8                _mdata = .
 
-.text           0x000000d8      0x450
+.text           0x000000d8      0x5c2
  *(.text)
  .text          0x000000d8        0x1 ./src/hardware_setup.o
                 0x000000d8                HardwareSetup
@@ -106,23 +106,24 @@ Linker script and memory map
                 0x00000295                INT_MD
                 0x000002a1                INT_FL
                 0x000002ad                INT_BRK_I
- .text          0x000002b9       0x94 ./src/main.o
+ .text          0x000002b9      0x1f8 ./src/main.o
                 0x000002b9                task1
-                0x00000303                task2
- .text          0x0000034d       0x60 ./src/reset_program.o
-                0x0000034f                PowerON_Reset
- .text          0x000003ad      0x153 ./src/ulwos.o
-                0x000003ad                save_context
-                0x000003de                restore_context
-                0x0000040d                ulwos_create_task
-                0x0000045e                ulwos_start
-                0x0000047e                INT_IT
- .text          0x00000500        0x0 ./src/vector_table.o
+                0x000003b5                task2
+ .text          0x000004b1       0x60 ./src/reset_program.o
+                0x000004b3                PowerON_Reset
+ .text          0x00000511      0x160 ./src/ulwos.o
+                0x00000511                save_context
+                0x00000542                restore_context
+                0x00000572                ulwos_create_task
+                0x000005cd                ulwos_start
+                0x000005ee                INT_IT
+ .text          0x00000671        0x0 ./src/vector_table.o
  *(.text.*)
- .text.startup  0x00000500       0x28 ./src/main.o
-                0x00000500                main
-                0x00000528                etext = .
-                0x00000528                . = ALIGN (0x2)
+ .text.startup  0x00000671       0x28 ./src/main.o
+                0x00000671                main
+                0x00000699                etext = .
+                0x0000069a                . = ALIGN (0x2)
+ *fill*         0x00000699        0x1 
                 0x00000000                PROVIDE (__rl78_abs__, 0x0)
 
 .init
@@ -149,9 +150,9 @@ Linker script and memory map
 .eh_frame
  *(.eh_frame)
 
-.jcr            0x00000528        0x0
+.jcr            0x0000069a        0x0
  *(.jcr)
-                0x00000528                . = ALIGN (0x2)
+                0x0000069a                . = ALIGN (0x2)
 
 .data           0x000fef00        0x0 load address 0x000000d8
                 0x000fef00                . = ALIGN (0x2)
@@ -168,7 +169,7 @@ Linker script and memory map
                 0x000fef00                _edata = .
                 0x00000000                PROVIDE (__romdatacopysize, SIZEOF (.data))
 
-.bss            0x000fef00      0x594 load address 0x000000d8
+.bss            0x000fef00      0x26c load address 0x000000d8
                 0x000fef00                . = ALIGN (0x2)
                 0x000fef00                _bss = .
  *(.bss)
@@ -176,16 +177,16 @@ Linker script and memory map
  .bss           0x000fef00        0x0 ./src/interrupt_handlers.o
  .bss           0x000fef00        0x0 ./src/main.o
  .bss           0x000fef00        0x0 ./src/reset_program.o
- .bss           0x000fef00      0x194 ./src/ulwos.o
- .bss           0x000ff094        0x0 ./src/vector_table.o
+ .bss           0x000fef00       0x6c ./src/ulwos.o
+ .bss           0x000fef6c        0x0 ./src/vector_table.o
  *(.bss.**)
-                0x000ff094                . = ALIGN (0x2)
+                0x000fef6c                . = ALIGN (0x2)
  *(COMMON)
- COMMON         0x000ff094      0x400 ./src/ulwos.o
-                0x000ff094                task_stack
-                0x000ff494                . = ALIGN (0x2)
-                0x000ff494                _ebss = .
-                0x000ff494                _end = .
+ COMMON         0x000fef6c      0x200 ./src/ulwos.o
+                0x000fef6c                ulwos_task_stack
+                0x000ff16c                . = ALIGN (0x2)
+                0x000ff16c                _ebss = .
+                0x000ff16c                _end = .
                 0x00000064                PROVIDE (stack_size, 0x64)
 
 .stack          0x000ffedc        0x0
@@ -205,19 +206,19 @@ LOAD C:\PROGRA~2\KPIT\GNURL7~1.02-\rl78-elf/rl78-elf/lib/g13\libsim.a
 END GROUP
 OUTPUT(ULWOS_dual_led.x elf32-rl78)
 
-.debug_frame    0x00000000      0x7d8
+.debug_frame    0x00000000      0x7f8
  .debug_frame   0x00000000       0x24 ./src/hardware_setup.o
  .debug_frame   0x00000024      0x6f4 ./src/interrupt_handlers.o
- .debug_frame   0x00000718       0x5c ./src/main.o
- .debug_frame   0x00000774       0x64 ./src/ulwos.o
+ .debug_frame   0x00000718       0x7c ./src/main.o
+ .debug_frame   0x00000794       0x64 ./src/ulwos.o
 
-.debug_info     0x00000000      0x8e3
+.debug_info     0x00000000      0x8ea
  .debug_info    0x00000000       0x37 ./src/hardware_setup.o
  .debug_info    0x00000037      0x2ce ./src/interrupt_handlers.o
- .debug_info    0x00000305      0x216 ./src/main.o
- .debug_info    0x0000051b       0x7a ./src/reset_program.o
- .debug_info    0x00000595      0x28d ./src/ulwos.o
- .debug_info    0x00000822       0xc1 ./src/vector_table.o
+ .debug_info    0x00000305      0x21d ./src/main.o
+ .debug_info    0x00000522       0x7a ./src/reset_program.o
+ .debug_info    0x0000059c      0x28d ./src/ulwos.o
+ .debug_info    0x00000829       0xc1 ./src/vector_table.o
 
 .debug_abbrev   0x00000000      0x347
  .debug_abbrev  0x00000000       0x2c ./src/hardware_setup.o
@@ -249,15 +250,15 @@ OUTPUT(ULWOS_dual_led.x elf32-rl78)
  .debug_line    0x000004cb      0x1cf ./src/ulwos.o
  .debug_line    0x0000069a       0x36 ./src/vector_table.o
 
-.debug_str      0x00000000      0x3e3
+.debug_str      0x00000000      0x410
  .debug_str     0x00000000      0x121 ./src/hardware_setup.o
  .debug_str     0x00000121      0x162 ./src/interrupt_handlers.o
                                 0x25d (size before relaxing)
- .debug_str     0x00000283       0x8b ./src/main.o
-                                0x192 (size before relaxing)
- .debug_str     0x0000030e       0x96 ./src/ulwos.o
-                                0x212 (size before relaxing)
- .debug_str     0x000003a4       0x3f ./src/vector_table.o
+ .debug_str     0x00000283       0x94 ./src/main.o
+                                0x19b (size before relaxing)
+ .debug_str     0x00000317       0xba ./src/ulwos.o
+                                0x236 (size before relaxing)
+ .debug_str     0x000003d1       0x3f ./src/vector_table.o
                                 0x159 (size before relaxing)
 
 .comment        0x00000000       0x94

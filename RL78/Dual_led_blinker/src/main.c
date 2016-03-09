@@ -25,23 +25,23 @@
 #define LED P7_bit.no7
 #define LED2 P7_bit.no6
 
-void task1(void){
-	volatile int count;
+void __attribute__ ((noreturn)) task1(void){
+	volatile long int count;
 	while (1){
 		LED = 0;
-		for (count=0; count<1000;count++);
+		for (count=0; count<100000;count++);
 		LED = 1;
-		for (count=0; count<1000;count++);
+		for (count=0; count<100000;count++);
 	}
 }
 
-void task2(void){
-	volatile int count;
+void __attribute__ ((noreturn)) task2(void){
+	volatile long int count;
 	while (1){
 		LED2 = 0;
-		for (count=0; count<2000;count++);
+		for (count=0; count<200000;count++);
 		LED2 = 1;
-		for (count=0; count<2000;count++);
+		for (count=0; count<200000;count++);
 	}
 }
 
@@ -52,7 +52,7 @@ int main(void){
 	ULWOS_TASKHANDLER tk1 = ulwos_create_task(&task1);
 	ULWOS_TASKHANDLER tk2 = ulwos_create_task(&task2);
 	ulwos_start();
-	// the following code is never executed!!! It is here "just in case" ;)
+	// the following code is never reached!!! It is here "just in case" ;)
 	while (1){
 	}
 }
