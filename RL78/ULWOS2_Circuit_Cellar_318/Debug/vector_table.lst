@@ -1,0 +1,113 @@
+   1                             	r8	=	0xffef0
+   2                             	r16	=	0xffee8
+   3                             	r24	=	0xffee0
+   4                             	r9	=	0xffef1
+   5                             	r17	=	0xffee9
+   6                             	r25	=	0xffee1
+   7                             	r10	=	0xffef2
+   8                             	r18	=	0xffeea
+   9                             	r26	=	0xffee2
+  10                             	r11	=	0xffef3
+  11                             	r19	=	0xffeeb
+  12                             	r27	=	0xffee3
+  13                             	r12	=	0xffef4
+  14                             	r20	=	0xffeec
+  15                             	r28	=	0xffee4
+  16                             	r13	=	0xffef5
+  17                             	r21	=	0xffeed
+  18                             	r29	=	0xffee5
+  19                             	r14	=	0xffef6
+  20                             	r22	=	0xffeee
+  21                             	r30	=	0xffee6
+  22                             	r15	=	0xffef7
+  23                             	r23	=	0xffeef
+  24                             	r31	=	0xffee7
+  25                             	.text
+  26                             	.Ltext0:
+  27                             		.global	_Vectors
+  28                             		.section	.vects,"aw",@progbits
+  29                             		.balign 2
+  32                             	_Vectors:
+  33 0000 00 00                   		.short	%code(_INT_WDTI)
+  34 0002 00 00                   		.short	%code(_INT_LVI)
+  35 0004 00 00                   		.short	%code(_INT_P0)
+  36 0006 00 00                   		.short	%code(_INT_P1)
+  37 0008 00 00                   		.short	%code(_INT_P2)
+  38 000a 00 00                   		.short	%code(_INT_P3)
+  39 000c 00 00                   		.short	%code(_INT_P4)
+  40 000e 00 00                   		.short	%code(_INT_P5)
+  41 0010 00 00                   		.short	%code(_INT_ST2)
+  42 0012 00 00                   		.short	%code(_INT_SR2)
+  43 0014 00 00                   		.short	%code(_INT_SRE2)
+  44 0016 00 00                   		.short	%code(_INT_DMA0)
+  45 0018 00 00                   		.short	%code(_INT_DMA1)
+  46 001a 00 00                   		.short	%code(_INT_ST0)
+  47 001c 00 00                   		.short	%code(_INT_SR0)
+  48 001e 00 00                   		.short	%code(_INT_TM01H)
+  49 0020 00 00                   		.short	%code(_INT_ST1)
+  50 0022 00 00                   		.short	%code(_INT_SR1)
+  51 0024 00 00                   		.short	%code(_INT_TM03H)
+  52 0026 00 00                   		.short	%code(_INT_IICA0)
+  53 0028 00 00                   		.short	%code(_INT_TM00)
+  54 002a 00 00                   		.short	%code(_INT_TM01)
+  55 002c 00 00                   		.short	%code(_INT_TM02)
+  56 002e 00 00                   		.short	%code(_INT_TM03)
+  57 0030 00 00                   		.short	%code(_INT_AD)
+  58 0032 00 00                   		.short	%code(_INT_RTC)
+  59 0034 00 00                   		.short	%code(_INT_IT)
+  60 0036 00 00                   		.short	%code(_INT_KR)
+  61 0038 FF FF                   		.short	-1
+  62 003a FF FF                   		.short	-1
+  63 003c FF FF                   		.short	-1
+  64 003e 00 00                   		.short	%code(_INT_TM04)
+  65 0040 00 00                   		.short	%code(_INT_TM05)
+  66 0042 00 00                   		.short	%code(_INT_TM06)
+  67 0044 00 00                   		.short	%code(_INT_TM07)
+  68 0046 00 00                   		.short	%code(_INT_P6)
+  69 0048 00 00                   		.short	%code(_INT_P7)
+  70 004a 00 00                   		.short	%code(_INT_P8)
+  71 004c 00 00                   		.short	%code(_INT_P9)
+  72 004e 00 00                   		.short	%code(_INT_P10)
+  73 0050 00 00                   		.short	%code(_INT_P11)
+  74 0052 FF FF                   		.short	-1
+  75 0054 FF FF                   		.short	-1
+  76 0056 FF FF                   		.short	-1
+  77 0058 FF FF                   		.short	-1
+  78 005a 00 00                   		.short	%code(_INT_MD)
+  79 005c FF FF                   		.short	-1
+  80 005e 00 00                   		.short	%code(_INT_FL)
+  81 0060 FF FF                   		.short	-1
+  82 0062 FF FF                   		.short	-1
+  83 0064 FF FF                   		.short	-1
+  84 0066 FF FF                   		.short	-1
+  85 0068 FF FF                   		.short	-1
+  86 006a FF FF                   		.short	-1
+  87 006c FF FF                   		.short	-1
+  88 006e FF FF                   		.short	-1
+  89 0070 FF FF                   		.short	-1
+  90 0072 FF FF                   		.short	-1
+  91 0074 FF FF                   		.short	-1
+  92 0076 FF FF                   		.short	-1
+  93 0078 FF FF                   		.short	-1
+  94 007a 00 00                   		.short	%code(_INT_BRK_I)
+  95                             		.global	_HardwareVectors
+  96                             		.section	.vec,"aw",@progbits
+  97                             		.balign 2
+ 100                             	_HardwareVectors:
+ 101 0000 00 00                   		.short	%code(_PowerON_Reset)
+ 102 0002 FF FF                   		.short	-1
+ 103                             		.global	_Security_Id
+ 104                             		.section	.security_id,"a",@progbits
+ 107                             	_Security_Id:
+ 108 0000 00 00 00 00 00 00 00 00 		.zero	10
+ 108      00 00 
+ 109                             		.global	_Option_Bytes
+ 110                             		.section	.option_bytes,"a",@progbits
+ 113                             	_Option_Bytes:
+ 114 0000 60                      		.byte	96
+ 115 0001 91                      		.byte	-111
+ 116 0002 E8                      		.byte	-24
+ 117 0003 85                      		.byte	-123
+ 118                             	.text
+ 119                             	.Letext0:
+ 120                             		.file 1 "../src/vector_table.c"

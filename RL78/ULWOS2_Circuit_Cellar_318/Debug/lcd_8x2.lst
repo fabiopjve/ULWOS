@@ -1,0 +1,1209 @@
+   1                             	r8	=	0xffef0
+   2                             	r16	=	0xffee8
+   3                             	r24	=	0xffee0
+   4                             	r9	=	0xffef1
+   5                             	r17	=	0xffee9
+   6                             	r25	=	0xffee1
+   7                             	r10	=	0xffef2
+   8                             	r18	=	0xffeea
+   9                             	r26	=	0xffee2
+  10                             	r11	=	0xffef3
+  11                             	r19	=	0xffeeb
+  12                             	r27	=	0xffee3
+  13                             	r12	=	0xffef4
+  14                             	r20	=	0xffeec
+  15                             	r28	=	0xffee4
+  16                             	r13	=	0xffef5
+  17                             	r21	=	0xffeed
+  18                             	r29	=	0xffee5
+  19                             	r14	=	0xffef6
+  20                             	r22	=	0xffeee
+  21                             	r30	=	0xffee6
+  22                             	r15	=	0xffef7
+  23                             	r23	=	0xffeef
+  24                             	r31	=	0xffee7
+  25                             	.text
+  26                             	.Ltext0:
+  27                             		.global	_LCD_delay_ms
+  29                             	_LCD_delay_ms:
+  30                             	.LFB0:
+  31                             		.file 1 "../src/lcd_8x2.c"
+   1:../src/lcd_8x2.c **** /************************************************************************/
+   2:../src/lcd_8x2.c **** /*  LCD.C - Biblioteca de manipula��o de m�dulo LCD no RL78             */
+   3:../src/lcd_8x2.c **** /*                                                                      */
+   4:../src/lcd_8x2.c **** /*  Autor: F�bio Pereira                                                */
+   5:../src/lcd_8x2.c **** /*                                                                      */
+   6:../src/lcd_8x2.c **** /************************************************************************/
+   7:../src/lcd_8x2.c **** 
+   8:../src/lcd_8x2.c **** // As defini��es a seguir s�o utilizadas para acesso aos pinos do display
+   9:../src/lcd_8x2.c **** #include "iodefine.h"
+  10:../src/lcd_8x2.c **** #include "lcd_8x2.h"
+  11:../src/lcd_8x2.c **** 
+  12:../src/lcd_8x2.c **** void LCD_delay_ms(unsigned char time)
+  13:../src/lcd_8x2.c **** {
+  32                             		.loc 1 13 0
+  33                             	.LVL0:
+  34 0000 88 04                   		mov	a, [sp+4]
+  35 0002 9D F2                   		mov	r10, a
+  14:../src/lcd_8x2.c ****   unsigned int temp;
+  15:../src/lcd_8x2.c ****   for (;time;time--) for (temp=CPU_CLOCK/30;temp;temp--) asm("NOP");
+  36                             		.loc 1 15 0
+  37 0004 D4 F2                   		cmp0	r10
+  38 0006 61 F8                   		 sknz
+  39 0008 EC 26 00 00             		 br	!!.L1
+  40                             	.LVL1:
+  41                             	.L6:
+  13:../src/lcd_8x2.c ****   unsigned int temp;
+  42                             		.loc 1 13 0
+  43 000c C9 F0 2A 04             		movw	r8, #1066
+  44                             	.LVL2:
+  45                             	.L4:
+  46                             		.loc 1 15 0 discriminator 3
+  47                             	 ; 15 "../src/lcd_8x2.c" 1
+  48 0010 00                      		NOP
+  49                             	 ; 0 "" 2
+  50                             	.LVL3:
+  51 0011 B6 F0                   		decw	r8
+  52                             	.LVL4:
+  53 0013 AD F0                   		movw	ax, r8
+  54 0015 44 00 00                		cmpw	ax, #0
+  55 0018 61 E8                   		 skz
+  56 001a EC 10 00 00             		 br	!!.L4
+  57                             		.loc 1 15 0 is_stmt 0 discriminator 4
+  58 001e B4 F2                   		dec	r10
+  59                             	.LVL5:
+  60 0020 61 E8                   		skz
+  61 0022 EC 0C 00 00             		 br	!!.L6
+  62                             		 # zero-comparison eliminated
+  63                             	.LVL6:
+  64                             	.L1:
+  16:../src/lcd_8x2.c **** }
+  65                             		.loc 1 16 0 is_stmt 1
+  66 0026 D7                      		ret
+  67                             	.LFE0:
+  69                             		.global	_LCD_send4
+  71                             	_LCD_send4:
+  72                             	.LFB1:
+  17:../src/lcd_8x2.c **** 
+  18:../src/lcd_8x2.c **** //**************************************************************************
+  19:../src/lcd_8x2.c **** //* Fun��o de envio de um nibble para o display
+  20:../src/lcd_8x2.c **** //**************************************************************************
+  21:../src/lcd_8x2.c **** //* Argumentos de chamada:
+  22:../src/lcd_8x2.c **** //* char dado : dado a ser enviado para o display (somente o nibble inferior)
+  23:../src/lcd_8x2.c **** //**************************************************************************
+  24:../src/lcd_8x2.c **** //* Retorno : nada
+  25:../src/lcd_8x2.c **** //**************************************************************************
+  26:../src/lcd_8x2.c **** void LCD_send4(char data)
+  27:../src/lcd_8x2.c **** {
+  73                             		.loc 1 27 0
+  74                             	.LVL7:
+  75 0027 88 04                   		mov	a, [sp+4]
+  76 0029 9D F0                   		mov	r8, a
+  28:../src/lcd_8x2.c ****   // coloca os quatro bits nas saidas
+  29:../src/lcd_8x2.c **** #ifdef PIN_LCD_RW
+  30:../src/lcd_8x2.c **** 	PIN_LCD_RW = 0;
+  31:../src/lcd_8x2.c **** #endif
+  32:../src/lcd_8x2.c ****   //PORT_LCD_DATA4 = data & 0x0F;
+  33:../src/lcd_8x2.c ****   if (data & 0x08) PIN_LCD_D7=1; else PIN_LCD_D7=0 ;
+  77                             		.loc 1 33 0
+  78 002b 5C 08                   		and	a, #8
+  79 002d 9D F1                   		mov	r9, a
+  80 002f D4 F1                   		cmp0	r9
+  81 0031 61 F8                   		 sknz
+  82 0033 EC 75 00 00             		 br	!!.L11
+  83                             		.loc 1 33 0 is_stmt 0 discriminator 1
+  84 0037 71 30 07 FF             		set1	!-249.3
+  34:../src/lcd_8x2.c ****   if (data & 0x04) PIN_LCD_D6=1; else PIN_LCD_D6=0 ;
+  85                             		.loc 1 34 0 is_stmt 1 discriminator 1
+  86 003b 8D F0                   		mov	a, r8
+  87 003d 5C 04                   		and	a, #4
+  88 003f 9D F1                   		mov	r9, a
+  89 0041 D4 F1                   		cmp0	r9
+  90 0043 61 F8                   		 sknz
+  91 0045 EC 87 00 00             		 br	!!.L13
+  92                             	.L20:
+  93 0049 71 20 07 FF             		set1	!-249.2
+  35:../src/lcd_8x2.c ****   if (data & 0x02) PIN_LCD_D5=1; else PIN_LCD_D5=0 ;
+  94                             		.loc 1 35 0 discriminator 1
+  95 004d 8D F0                   		mov	a, r8
+  96 004f 5C 02                   		and	a, #2
+  97 0051 9D F1                   		mov	r9, a
+  98 0053 D4 F1                   		cmp0	r9
+  99 0055 61 F8                   		 sknz
+ 100 0057 EC 99 00 00             		 br	!!.L15
+ 101                             	.LVL8:
+ 102                             	.L21:
+ 103 005b 71 10 07 FF             		set1	!-249.1
+  36:../src/lcd_8x2.c ****   if (data & 0x01) PIN_LCD_D4=1; else PIN_LCD_D4=0 ;
+ 104                             		.loc 1 36 0 discriminator 1
+ 105 005f 5A F0 01                		and	r8, #1
+ 106                             	.LVL9:
+ 107 0062 61 E8                   		skz
+ 108 0064 EC A6 00 00             		 br	!!.L19
+ 109                             		 # zero-comparison eliminated
+ 110                             	.L17:
+ 111                             		.loc 1 36 0 is_stmt 0 discriminator 2
+ 112 0068 71 08 07 FF             		clr1	!-249.0
+  37:../src/lcd_8x2.c ****   // pulsa a linha enable
+  38:../src/lcd_8x2.c ****   PIN_LCD_EN = 1;
+ 113                             		.loc 1 38 0 is_stmt 1 discriminator 2
+ 114 006c 71 40 05 FF             		set1	!-251.4
+  39:../src/lcd_8x2.c ****   PIN_LCD_EN = 0;
+ 115                             		.loc 1 39 0 discriminator 2
+ 116 0070 71 48 05 FF             		clr1	!-251.4
+  40:../src/lcd_8x2.c **** }
+ 117                             		.loc 1 40 0 discriminator 2
+ 118 0074 D7                      		ret
+ 119                             	.LVL10:
+ 120                             	.L11:
+  33:../src/lcd_8x2.c ****   if (data & 0x04) PIN_LCD_D6=1; else PIN_LCD_D6=0 ;
+ 121                             		.loc 1 33 0 discriminator 2
+ 122 0075 71 38 07 FF             		clr1	!-249.3
+  34:../src/lcd_8x2.c ****   if (data & 0x02) PIN_LCD_D5=1; else PIN_LCD_D5=0 ;
+ 123                             		.loc 1 34 0 discriminator 2
+ 124 0079 8D F0                   		mov	a, r8
+ 125 007b 5C 04                   		and	a, #4
+ 126 007d 9D F1                   		mov	r9, a
+ 127 007f D4 F1                   		cmp0	r9
+ 128 0081 61 E8                   		 skz
+ 129 0083 EC 49 00 00             		 br	!!.L20
+ 130                             	.L13:
+ 131 0087 71 28 07 FF             		clr1	!-249.2
+  35:../src/lcd_8x2.c ****   if (data & 0x01) PIN_LCD_D4=1; else PIN_LCD_D4=0 ;
+ 132                             		.loc 1 35 0 discriminator 2
+ 133 008b 8D F0                   		mov	a, r8
+ 134 008d 5C 02                   		and	a, #2
+ 135 008f 9D F1                   		mov	r9, a
+ 136 0091 D4 F1                   		cmp0	r9
+ 137 0093 61 E8                   		 skz
+ 138 0095 EC 5B 00 00             		 br	!!.L21
+ 139                             	.L15:
+ 140 0099 71 18 07 FF             		clr1	!-249.1
+  36:../src/lcd_8x2.c ****   // pulsa a linha enable
+ 141                             		.loc 1 36 0 discriminator 2
+ 142 009d 5A F0 01                		and	r8, #1
+ 143                             	.LVL11:
+ 144 00a0 61 F8                   		sknz
+ 145 00a2 EC 68 00 00             		 br	!!.L17
+ 146                             		 # zero-comparison eliminated
+ 147                             	.L19:
+  36:../src/lcd_8x2.c ****   // pulsa a linha enable
+ 148                             		.loc 1 36 0 is_stmt 0 discriminator 1
+ 149 00a6 71 00 07 FF             		set1	!-249.0
+  38:../src/lcd_8x2.c ****   PIN_LCD_EN = 0;
+ 150                             		.loc 1 38 0 is_stmt 1 discriminator 1
+ 151 00aa 71 40 05 FF             		set1	!-251.4
+  39:../src/lcd_8x2.c **** }
+ 152                             		.loc 1 39 0 discriminator 1
+ 153 00ae 71 48 05 FF             		clr1	!-251.4
+ 154                             		.loc 1 40 0 discriminator 1
+ 155 00b2 D7                      		ret
+ 156                             	.LFE1:
+ 158                             		.global	_LCD_send8
+ 160                             	_LCD_send8:
+ 161                             	.LFB2:
+  41:../src/lcd_8x2.c **** //**************************************************************************
+  42:../src/lcd_8x2.c **** //* Fun��o de escrita de 1 byte no display
+  43:../src/lcd_8x2.c **** //**************************************************************************
+  44:../src/lcd_8x2.c **** //* Argumentos de chamada:
+  45:../src/lcd_8x2.c **** //* char endereco : 0 se instru��o, 1 se dado
+  46:../src/lcd_8x2.c **** //* char dado : dado ou comando a ser escrito
+  47:../src/lcd_8x2.c **** //**************************************************************************
+  48:../src/lcd_8x2.c **** //* Retorno : nada
+  49:../src/lcd_8x2.c **** //**************************************************************************
+  50:../src/lcd_8x2.c **** void LCD_send8(char addr, char data )
+  51:../src/lcd_8x2.c **** {
+ 162                             		.loc 1 51 0
+ 163                             		; start of function
+ 164                             		; push 2: r16
+ 165                             		; outgoing: 2 bytes
+ 166                             	.LVL12:
+ 167 00b3 61 EF                   		sel	rb2
+ 168 00b5 C1                      		push	ax ; r16
+ 169                             	.LCFI0:
+ 170 00b6 61 CF                   		sel	rb0
+ 171 00b8 20 02                   		subw	sp, #2
+ 172                             	.LCFI1:
+ 173 00ba 88 0A                   		mov	a, [sp+10]
+ 174 00bc 9D E8                   		mov	r16, a
+  52:../src/lcd_8x2.c ****   // configura a linha rs dependendo do modo selecionado
+  53:../src/lcd_8x2.c ****   PIN_LCD_RS = addr;
+ 175                             		.loc 1 53 0
+ 176 00be 88 08                   		mov	a, [sp+8]
+ 177 00c0 5C 01                   		and	a, #1
+ 178 00c2 31 59                   		shl	a, 5
+ 179 00c4 9D F0                   		mov	r8, a
+ 180 00c6 8F 05 FF                		mov	a, !-251
+ 181 00c9 5C DF                   		and	a, #-33
+ 182 00cb 6B F0                   		or	a, r8
+ 183 00cd 9F 05 FF                		mov	!-251, a
+ 184                             	.LVL13:
+ 185 00d0 C9 F0 2A 04             		movw	r8, #1066
+ 186                             	.LVL14:
+ 187                             	.L23:
+ 188                             	.LBB16:
+ 189                             	.LBB17:
+  15:../src/lcd_8x2.c **** }
+ 190                             		.loc 1 15 0
+ 191                             	 ; 15 "../src/lcd_8x2.c" 1
+ 192 00d4 00                      		NOP
+ 193                             	 ; 0 "" 2
+ 194                             	.LVL15:
+ 195 00d5 B6 F0                   		decw	r8
+ 196                             	.LVL16:
+ 197 00d7 AD F0                   		movw	ax, r8
+ 198 00d9 44 00 00                		cmpw	ax, #0
+ 199 00dc 61 E8                   		 skz
+ 200 00de EC D4 00 00             		 br	!!.L23
+ 201                             	.LVL17:
+ 202                             	.LBE17:
+ 203                             	.LBE16:
+  54:../src/lcd_8x2.c ****   LCD_delay_ms(1);
+  55:../src/lcd_8x2.c ****   // envia a primeira parte do byte
+  56:../src/lcd_8x2.c ****   LCD_send4(data >> 4);
+ 204                             		.loc 1 56 0
+ 205 00e2 8D E8                   		mov	a, r16
+ 206 00e4 31 4A                   		shr	a, 4
+ 207 00e6 98 00                   		mov	[sp], a
+ 208 00e8 FC 00 00 00             		call	!!%code(_LCD_send4)
+ 209                             	.LVL18:
+  57:../src/lcd_8x2.c ****   // envia a segunda parte do byte
+  58:../src/lcd_8x2.c ****   LCD_send4(data & 0x0f);
+ 210                             		.loc 1 58 0
+ 211 00ec 8D E8                   		mov	a, r16
+ 212 00ee 5C 0F                   		and	a, #15
+ 213 00f0 98 00                   		mov	[sp], a
+ 214 00f2 FC 00 00 00             		call	!!%code(_LCD_send4)
+ 215                             	.LVL19:
+  59:../src/lcd_8x2.c **** }
+ 216                             		.loc 1 59 0
+ 217 00f6 10 02                   		addw	sp, #2
+ 218 00f8 61 EF                   		sel	rb2
+ 219 00fa C0                      		pop	ax ; r16
+ 220                             	.LVL20:
+ 221 00fb 61 CF                   		sel	rb0
+ 222 00fd D7                      		ret
+ 223                             	.LFE2:
+ 225                             		.global	_LCD_init
+ 227                             	_LCD_init:
+ 228                             	.LFB3:
+  60:../src/lcd_8x2.c **** 
+  61:../src/lcd_8x2.c **** //**************************************************************************
+  62:../src/lcd_8x2.c **** //* Fun��o de inicializa��o do display
+  63:../src/lcd_8x2.c **** //**************************************************************************
+  64:../src/lcd_8x2.c **** //* Argumentos de chamada:
+  65:../src/lcd_8x2.c **** //* char modo1 : modo do display (n�mero de linhas e tamanho dos caracteres
+  66:../src/lcd_8x2.c **** //* char modo2 : modo do display (estado do cursor e do display)
+  67:../src/lcd_8x2.c **** //**************************************************************************
+  68:../src/lcd_8x2.c **** //* Retorno : nada
+  69:../src/lcd_8x2.c **** //**************************************************************************
+  70:../src/lcd_8x2.c **** void LCD_init(char md1, char md2 )
+  71:../src/lcd_8x2.c **** {
+ 229                             		.loc 1 71 0
+ 230                             		; start of function
+ 231                             		; push 2: r16
+ 232                             		; outgoing: 4 bytes
+ 233                             	.LVL21:
+ 234 00fe 61 EF                   		sel	rb2
+ 235 0100 C1                      		push	ax ; r16
+ 236                             	.LCFI2:
+ 237 0101 61 CF                   		sel	rb0
+ 238 0103 20 04                   		subw	sp, #4
+ 239                             	.LCFI3:
+  72:../src/lcd_8x2.c ****   unsigned char temp;
+  73:../src/lcd_8x2.c ****   // configura os pinos como sa�das
+  74:../src/lcd_8x2.c ****   PIN_LCD_EN_DIR = 0;
+ 240                             		.loc 1 74 0
+ 241 0105 71 48 25 FF             		clr1	!-219.4
+  75:../src/lcd_8x2.c ****   PIN_LCD_RS_DIR = 0;
+ 242                             		.loc 1 75 0
+ 243 0109 71 58 25 FF             		clr1	!-219.5
+  76:../src/lcd_8x2.c **** #ifdef PIN_LCD_RW_DIR
+  77:../src/lcd_8x2.c ****   PIN_LCD_RW_DIR = 0;
+  78:../src/lcd_8x2.c ****   PIN_LCD_RW = 0;
+  79:../src/lcd_8x2.c **** #endif
+  80:../src/lcd_8x2.c ****   //PORT_LCD_DATA4_DIR = 0xF0;
+  81:../src/lcd_8x2.c ****   PIN_LCD_D7_DIR = 0;
+ 244                             		.loc 1 81 0
+ 245 010d 71 38 27 FF             		clr1	!-217.3
+  82:../src/lcd_8x2.c ****   PIN_LCD_D6_DIR = 0;
+ 246                             		.loc 1 82 0
+ 247 0111 71 28 27 FF             		clr1	!-217.2
+  83:../src/lcd_8x2.c ****   PIN_LCD_D5_DIR = 0;
+ 248                             		.loc 1 83 0
+ 249 0115 71 18 27 FF             		clr1	!-217.1
+  84:../src/lcd_8x2.c ****   PIN_LCD_D4_DIR = 0;
+ 250                             		.loc 1 84 0
+ 251 0119 71 08 27 FF             		clr1	!-217.0
+  85:../src/lcd_8x2.c ****   // coloca os pinos em n�vel l�gico 0
+  86:../src/lcd_8x2.c ****   //PORT_LCD_DATA4 = 0;
+  87:../src/lcd_8x2.c ****   PIN_LCD_D7 = 0;
+ 252                             		.loc 1 87 0
+ 253 011d 71 38 07 FF             		clr1	!-249.3
+  88:../src/lcd_8x2.c ****   PIN_LCD_D6 = 0;
+ 254                             		.loc 1 88 0
+ 255 0121 71 28 07 FF             		clr1	!-249.2
+  89:../src/lcd_8x2.c ****   PIN_LCD_D5 = 0;
+ 256                             		.loc 1 89 0
+ 257 0125 71 18 07 FF             		clr1	!-249.1
+  90:../src/lcd_8x2.c ****   PIN_LCD_D4 = 0;
+ 258                             		.loc 1 90 0
+ 259 0129 71 08 07 FF             		clr1	!-249.0
+  91:../src/lcd_8x2.c ****   PIN_LCD_RS = 0;
+ 260                             		.loc 1 91 0
+ 261 012d 71 58 05 FF             		clr1	!-251.5
+  92:../src/lcd_8x2.c ****   PIN_LCD_EN = 0;
+ 262                             		.loc 1 92 0
+ 263 0131 71 48 05 FF             		clr1	!-251.4
+ 264                             	.LVL22:
+ 265 0135 CD F2 0F                		mov	r10, #15
+ 266                             	.LVL23:
+ 267                             	.L26:
+  71:../src/lcd_8x2.c ****   unsigned char temp;
+ 268                             		.loc 1 71 0
+ 269 0138 C9 F0 2A 04             		movw	r8, #1066
+ 270                             	.LVL24:
+ 271                             	.L27:
+ 272                             	.LBB18:
+ 273                             	.LBB19:
+  15:../src/lcd_8x2.c **** }
+ 274                             		.loc 1 15 0
+ 275                             	 ; 15 "../src/lcd_8x2.c" 1
+ 276 013c 00                      		NOP
+ 277                             	 ; 0 "" 2
+ 278                             	.LVL25:
+ 279 013d B6 F0                   		decw	r8
+ 280                             	.LVL26:
+ 281 013f AD F0                   		movw	ax, r8
+ 282 0141 44 00 00                		cmpw	ax, #0
+ 283 0144 61 E8                   		 skz
+ 284 0146 EC 3C 01 00             		 br	!!.L27
+ 285                             	.LVL27:
+ 286 014a B4 F2                   		dec	r10
+ 287                             	.LVL28:
+ 288 014c 61 E8                   		skz
+ 289 014e EC 38 01 00             		 br	!!.L26
+ 290                             		 # zero-comparison eliminated
+ 291 0152 CD E8 03                		mov	r16, #3
+ 292                             	.LVL29:
+ 293                             	.L28:
+ 294                             	.LBE19:
+ 295                             	.LBE18:
+  93:../src/lcd_8x2.c ****   LCD_delay_ms(15);
+  94:../src/lcd_8x2.c ****   // envia uma seq��ncia de 3 vezes 0x03 e depois 0x02 para configurar o m�dulo
+  95:../src/lcd_8x2.c ****   // no modo de 4 bits
+  96:../src/lcd_8x2.c ****   for(temp=3;temp;temp--)
+  97:../src/lcd_8x2.c ****   {
+  98:../src/lcd_8x2.c ****     LCD_send4(3);
+ 296                             		.loc 1 98 0 discriminator 3
+ 297 0155 51 03                   		mov	a, #3
+ 298 0157 98 00                   		mov	[sp], a
+ 299 0159 FC 00 00 00             		call	!!%code(_LCD_send4)
+ 300                             	.LVL30:
+ 301 015d CD F2 05                		mov	r10, #5
+ 302                             	.LVL31:
+ 303                             	.L29:
+ 304                             	.LBB21:
+ 305                             	.LBB20:
+  15:../src/lcd_8x2.c **** }
+ 306                             		.loc 1 15 0
+ 307 0160 C9 F0 2A 04             		movw	r8, #1066
+ 308                             	.LVL32:
+ 309                             	.L30:
+ 310                             	.LBE20:
+ 311                             	.LBE21:
+ 312                             	.LBB22:
+ 313                             	.LBB23:
+ 314                             	 ; 15 "../src/lcd_8x2.c" 1
+ 315 0164 00                      		NOP
+ 316                             	 ; 0 "" 2
+ 317                             	.LVL33:
+ 318 0165 B6 F0                   		decw	r8
+ 319                             	.LVL34:
+ 320 0167 AD F0                   		movw	ax, r8
+ 321 0169 44 00 00                		cmpw	ax, #0
+ 322 016c 61 E8                   		 skz
+ 323 016e EC 64 01 00             		 br	!!.L30
+ 324                             	.LVL35:
+ 325 0172 B4 F2                   		dec	r10
+ 326                             	.LVL36:
+ 327 0174 61 E8                   		skz
+ 328 0176 EC 60 01 00             		 br	!!.L29
+ 329                             		 # zero-comparison eliminated
+ 330                             	.LVL37:
+ 331 017a B4 E8                   		dec	r16
+ 332                             	.LVL38:
+ 333                             	.LBE23:
+ 334                             	.LBE22:
+  96:../src/lcd_8x2.c ****   {
+ 335                             		.loc 1 96 0 discriminator 3
+ 336 017c 61 E8                   		skz
+ 337 017e EC 55 01 00             		 br	!!.L28
+ 338                             		 # zero-comparison eliminated
+  99:../src/lcd_8x2.c ****     LCD_delay_ms(5);
+ 100:../src/lcd_8x2.c ****   }
+ 101:../src/lcd_8x2.c ****   LCD_send4(2);
+ 339                             		.loc 1 101 0
+ 340 0182 51 02                   		mov	a, #2
+ 341 0184 98 00                   		mov	[sp], a
+ 342 0186 FC 00 00 00             		call	!!%code(_LCD_send4)
+ 343                             	.LVL39:
+ 102:../src/lcd_8x2.c ****   // envia c�digos de inicializa��o do display
+ 103:../src/lcd_8x2.c ****   LCD_send8(0,0x20 | md1);
+ 344                             		.loc 1 103 0
+ 345 018a 8D E8                   		mov	a, r16
+ 346 018c 98 00                   		mov	[sp], a
+ 347 018e 88 0A                   		mov	a, [sp+10]
+ 348 0190 6C 20                   		or	a, #32
+ 349 0192 98 02                   		mov	[sp+2], a
+ 350 0194 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 351                             	.LVL40:
+ 104:../src/lcd_8x2.c ****   LCD_send8(0,0x08 | md2);
+ 352                             		.loc 1 104 0
+ 353 0198 8D E8                   		mov	a, r16
+ 354 019a 98 00                   		mov	[sp], a
+ 355 019c 88 0C                   		mov	a, [sp+12]
+ 356 019e 6C 08                   		or	a, #8
+ 357 01a0 98 02                   		mov	[sp+2], a
+ 358 01a2 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 359                             	.LVL41:
+ 105:../src/lcd_8x2.c ****   LCD_send8(0,1);
+ 360                             		.loc 1 105 0
+ 361 01a6 8D E8                   		mov	a, r16
+ 362 01a8 98 00                   		mov	[sp], a
+ 363 01aa E1                      		oneb	a
+ 364 01ab 98 02                   		mov	[sp+2], a
+ 365 01ad FC 00 00 00             		call	!!%code(_LCD_send8)
+ 366                             	.LVL42:
+ 106:../src/lcd_8x2.c ****   LCD_send8(0,6);
+ 367                             		.loc 1 106 0
+ 368 01b1 8D E8                   		mov	a, r16
+ 369 01b3 98 00                   		mov	[sp], a
+ 370 01b5 51 06                   		mov	a, #6
+ 371 01b7 98 02                   		mov	[sp+2], a
+ 372 01b9 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 373                             	.LVL43:
+ 107:../src/lcd_8x2.c **** }
+ 374                             		.loc 1 107 0
+ 375 01bd 10 04                   		addw	sp, #4
+ 376 01bf 61 EF                   		sel	rb2
+ 377 01c1 C0                      		pop	ax ; r16
+ 378                             	.LVL44:
+ 379 01c2 61 CF                   		sel	rb0
+ 380 01c4 D7                      		ret
+ 381                             	.LFE3:
+ 383                             		.global	_LCD_pos_xy
+ 385                             	_LCD_pos_xy:
+ 386                             	.LFB4:
+ 108:../src/lcd_8x2.c **** 
+ 109:../src/lcd_8x2.c **** //**************************************************************************
+ 110:../src/lcd_8x2.c **** //* Fun��o de posicionamento do cursor do display
+ 111:../src/lcd_8x2.c **** //**************************************************************************
+ 112:../src/lcd_8x2.c **** //* Argumentos de chamada:
+ 113:../src/lcd_8x2.c **** //* char x : coluna a ser posicionado o cursor (iniciando em 0)
+ 114:../src/lcd_8x2.c **** //* char y : linha a ser posicionado o cursor (0 ou 1)
+ 115:../src/lcd_8x2.c **** //**************************************************************************
+ 116:../src/lcd_8x2.c **** //* Retorno : nada
+ 117:../src/lcd_8x2.c **** //**************************************************************************
+ 118:../src/lcd_8x2.c **** void LCD_pos_xy(char x, char y)
+ 119:../src/lcd_8x2.c **** {
+ 387                             		.loc 1 119 0
+ 388                             		; start of function
+ 389                             		; outgoing: 4 bytes
+ 390                             	.LVL45:
+ 391 01c5 20 04                   		subw	sp, #4
+ 392                             	.LCFI4:
+ 393                             	.LVL46:
+ 120:../src/lcd_8x2.c ****   unsigned char addr;
+ 121:../src/lcd_8x2.c ****   addr = y * 64 + x;
+ 122:../src/lcd_8x2.c ****   LCD_send8(0,0x80|addr);
+ 394                             		.loc 1 122 0
+ 395 01c7 F1                      		clrb	a
+ 396 01c8 98 00                   		mov	[sp], a
+ 121:../src/lcd_8x2.c ****   LCD_send8(0,0x80|addr);
+ 397                             		.loc 1 121 0
+ 398 01ca 88 0A                   		mov	a, [sp+10]
+ 399 01cc 31 69                   		shl	a, 6
+ 400 01ce 76                      		mov	l, a
+ 401 01cf 88 08                   		mov	a, [sp+8]
+ 402 01d1 61 0E                   		add	a, l
+ 403                             	.LVL47:
+ 404                             		.loc 1 122 0
+ 405 01d3 6C 80                   		or	a, #-128
+ 406                             	.LVL48:
+ 407 01d5 98 02                   		mov	[sp+2], a
+ 408 01d7 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 409                             	.LVL49:
+ 123:../src/lcd_8x2.c **** }
+ 410                             		.loc 1 123 0
+ 411 01db 10 04                   		addw	sp, #4
+ 412 01dd D7                      		ret
+ 413                             	.LFE4:
+ 415                             		.global	_LCD_write_char
+ 417                             	_LCD_write_char:
+ 418                             	.LFB5:
+ 124:../src/lcd_8x2.c **** 
+ 125:../src/lcd_8x2.c **** //**************************************************************************
+ 126:../src/lcd_8x2.c **** //* Fun��o de escrita de um caractere no display
+ 127:../src/lcd_8x2.c **** //**************************************************************************
+ 128:../src/lcd_8x2.c **** //* Argumentos de chamada :
+ 129:../src/lcd_8x2.c **** //* char c : caractere a ser escrito
+ 130:../src/lcd_8x2.c **** //**************************************************************************
+ 131:../src/lcd_8x2.c **** //* Retorno : nada
+ 132:../src/lcd_8x2.c **** //**************************************************************************
+ 133:../src/lcd_8x2.c **** //* Observa��es :
+ 134:../src/lcd_8x2.c **** //*	\f apaga o conte�do do display
+ 135:../src/lcd_8x2.c **** //* \n e \r retornam o cursor para a primeira coluna da segunda linha
+ 136:../src/lcd_8x2.c **** //**************************************************************************
+ 137:../src/lcd_8x2.c **** void LCD_write_char(char data)
+ 138:../src/lcd_8x2.c **** // envia um caractere para o display
+ 139:../src/lcd_8x2.c **** {
+ 419                             		.loc 1 139 0
+ 420                             		; start of function
+ 421                             		; outgoing: 4 bytes
+ 422                             	.LVL50:
+ 423 01de 20 04                   		subw	sp, #4
+ 424                             	.LCFI5:
+ 425 01e0 88 08                   		mov	a, [sp+8]
+ 426 01e2 9D F0                   		mov	r8, a
+ 140:../src/lcd_8x2.c ****    switch (data)
+ 427                             		.loc 1 140 0
+ 428 01e4 4A F0 0C                		cmp	r8, #12
+ 429 01e7 61 F8                   		 sknz
+ 430 01e9 EC 1B 02 00             		 br	!!.L39
+ 431 01ed 4A F0 0D                		cmp	r8, #13
+ 432 01f0 61 F8                   		 sknz
+ 433 01f2 EC 0D 02 00             		 br	!!.L40
+ 434 01f6 4A F0 0A                		cmp	r8, #10
+ 435 01f9 61 F8                   		 sknz
+ 436 01fb EC 0D 02 00             		 br	!!.L40
+ 141:../src/lcd_8x2.c ****   {
+ 142:../src/lcd_8x2.c ****     case '\f' 	:
+ 143:../src/lcd_8x2.c ****       LCD_send8(0,1);
+ 144:../src/lcd_8x2.c ****       LCD_delay_ms(5);
+ 145:../src/lcd_8x2.c ****       break;
+ 146:../src/lcd_8x2.c ****     case '\n'	:
+ 147:../src/lcd_8x2.c ****     case '\r' 	:	
+ 148:../src/lcd_8x2.c ****       LCD_pos_xy(0,1);
+ 149:../src/lcd_8x2.c ****       break;
+ 150:../src/lcd_8x2.c ****     default	:	
+ 151:../src/lcd_8x2.c ****       LCD_send8(1,data);
+ 437                             		.loc 1 151 0
+ 438 01ff E1                      		oneb	a
+ 439 0200 98 00                   		mov	[sp], a
+ 440 0202 8D F0                   		mov	a, r8
+ 441 0204 98 02                   		mov	[sp+2], a
+ 442 0206 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 443                             	.LVL51:
+ 152:../src/lcd_8x2.c ****   }
+ 153:../src/lcd_8x2.c **** }
+ 444                             		.loc 1 153 0
+ 445 020a 10 04                   		addw	sp, #4
+ 446 020c D7                      		ret
+ 447                             	.LVL52:
+ 448                             	.L40:
+ 449                             	.LBB32:
+ 450                             	.LBB33:
+ 122:../src/lcd_8x2.c **** }
+ 451                             		.loc 1 122 0
+ 452 020d F1                      		clrb	a
+ 453                             	.LVL53:
+ 454 020e 98 00                   		mov	[sp], a
+ 455 0210 51 C0                   		mov	a, #-64
+ 456 0212 98 02                   		mov	[sp+2], a
+ 457 0214 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 458                             	.LVL54:
+ 459                             	.LBE33:
+ 460                             	.LBE32:
+ 461                             		.loc 1 153 0
+ 462 0218 10 04                   		addw	sp, #4
+ 463 021a D7                      		ret
+ 464                             	.LVL55:
+ 465                             	.L39:
+ 466                             	.LBB34:
+ 467                             	.LBB35:
+ 143:../src/lcd_8x2.c ****       LCD_delay_ms(5);
+ 468                             		.loc 1 143 0
+ 469 021b F1                      		clrb	a
+ 470                             	.LVL56:
+ 471 021c 98 00                   		mov	[sp], a
+ 472 021e E1                      		oneb	a
+ 473 021f 98 02                   		mov	[sp+2], a
+ 474 0221 FC 00 00 00             		call	!!%code(_LCD_send8)
+ 475                             	.LVL57:
+ 476 0225 CD F2 05                		mov	r10, #5
+ 477                             	.LVL58:
+ 478                             	.L41:
+ 479                             	.LBE35:
+ 480                             	.LBE34:
+ 139:../src/lcd_8x2.c ****    switch (data)
+ 481                             		.loc 1 139 0
+ 482 0228 C9 F0 2A 04             		movw	r8, #1066
+ 483                             	.LVL59:
+ 484                             	.L42:
+ 485                             	.LBB39:
+ 486                             	.LBB38:
+ 487                             	.LBB36:
+ 488                             	.LBB37:
+  15:../src/lcd_8x2.c **** }
+ 489                             		.loc 1 15 0
+ 490                             	 ; 15 "../src/lcd_8x2.c" 1
+ 491 022c 00                      		NOP
+ 492                             	 ; 0 "" 2
+ 493                             	.LVL60:
+ 494 022d B6 F0                   		decw	r8
+ 495                             	.LVL61:
+ 496 022f AD F0                   		movw	ax, r8
+ 497 0231 44 00 00                		cmpw	ax, #0
+ 498 0234 61 E8                   		 skz
+ 499 0236 EC 2C 02 00             		 br	!!.L42
+ 500                             	.LVL62:
+ 501 023a B4 F2                   		dec	r10
+ 502                             	.LVL63:
+ 503 023c 61 E8                   		skz
+ 504 023e EC 28 02 00             		 br	!!.L41
+ 505                             		 # zero-comparison eliminated
+ 506                             	.LBE37:
+ 507                             	.LBE36:
+ 508                             	.LBE38:
+ 509                             	.LBE39:
+ 510                             		.loc 1 153 0
+ 511 0242 10 04                   		addw	sp, #4
+ 512 0244 D7                      		ret
+ 513                             	.LFE5:
+ 515                             		.global	_LCD_write_string
+ 517                             	_LCD_write_string:
+ 518                             	.LFB6:
+ 154:../src/lcd_8x2.c **** 
+ 155:../src/lcd_8x2.c **** //**************************************************************************
+ 156:../src/lcd_8x2.c **** //* Fun��o de escrita de uma string no display
+ 157:../src/lcd_8x2.c **** //**************************************************************************
+ 158:../src/lcd_8x2.c **** //* Argumentos de chamada:
+ 159:../src/lcd_8x2.c **** //* char *c : um ponteiro para um caractere
+ 160:../src/lcd_8x2.c **** //**************************************************************************
+ 161:../src/lcd_8x2.c **** //* Retorno : nada
+ 162:../src/lcd_8x2.c **** //**************************************************************************
+ 163:../src/lcd_8x2.c **** void LCD_write_string (char *data)
+ 164:../src/lcd_8x2.c **** {
+ 519                             		.loc 1 164 0
+ 520                             		; start of function
+ 521                             		; push 2: r16
+ 522                             		; outgoing: 2 bytes
+ 523                             	.LVL64:
+ 524 0245 61 EF                   		sel	rb2
+ 525 0247 C1                      		push	ax ; r16
+ 526                             	.LCFI6:
+ 527 0248 61 CF                   		sel	rb0
+ 528 024a 20 02                   		subw	sp, #2
+ 529                             	.LCFI7:
+ 530 024c A8 08                   		movw	ax, [sp+8]
+ 531 024e BD E8                   		movw	r16, ax
+ 165:../src/lcd_8x2.c ****   while (*data)
+ 532                             		.loc 1 165 0
+ 533 0250 16                      		movw	hl, ax
+ 534 0251 8B                      		mov	a, [hl]
+ 535 0252 9D F0                   		mov	r8, a
+ 536 0254 D4 F0                   		cmp0	r8
+ 537 0256 61 F8                   		 sknz
+ 538 0258 EC 73 02 00             		 br	!!.L56
+ 539                             	.LVL65:
+ 540                             	.L60:
+ 166:../src/lcd_8x2.c ****   {
+ 167:../src/lcd_8x2.c ****     LCD_write_char(*data);
+ 541                             		.loc 1 167 0
+ 542 025c 8D F0                   		mov	a, r8
+ 543 025e 98 00                   		mov	[sp], a
+ 544 0260 FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 545                             	.LVL66:
+ 168:../src/lcd_8x2.c ****     data++;
+ 546                             		.loc 1 168 0
+ 547 0264 A6 E8                   		incw	r16
+ 548                             	.LVL67:
+ 165:../src/lcd_8x2.c ****   while (*data)
+ 549                             		.loc 1 165 0
+ 550 0266 FA E8                   		movw	hl, r16
+ 551 0268 8B                      		mov	a, [hl]
+ 552 0269 9D F0                   		mov	r8, a
+ 553 026b D4 F0                   		cmp0	r8
+ 554 026d 61 E8                   		 skz
+ 555 026f EC 5C 02 00             		 br	!!.L60
+ 556                             	.LVL68:
+ 557                             	.L56:
+ 169:../src/lcd_8x2.c ****   }
+ 170:../src/lcd_8x2.c **** }
+ 558                             		.loc 1 170 0
+ 559 0273 10 02                   		addw	sp, #2
+ 560 0275 61 EF                   		sel	rb2
+ 561 0277 C0                      		pop	ax ; r16
+ 562 0278 61 CF                   		sel	rb0
+ 563 027a D7                      		ret
+ 564                             	.LFE6:
+ 566                             		.global	_LCD_print_frac_int
+ 568                             	_LCD_print_frac_int:
+ 569                             	.LFB7:
+ 171:../src/lcd_8x2.c **** 
+ 172:../src/lcd_8x2.c **** /*
+ 173:../src/lcd_8x2.c ****   Esta fun��o escreve um valor inteiro no LCD. Ela utiliza uma formata��o
+ 174:../src/lcd_8x2.c ****   especial para representar um valor fracion�rio atrav�s de inteiros.
+ 175:../src/lcd_8x2.c ****   Os d�gitos de dezenas de milhares, milhares e centenas s�o impressos,
+ 176:../src/lcd_8x2.c ****   seguidos do ponto decimal e dos d�gitos de dezenas e unidades.
+ 177:../src/lcd_8x2.c ****   Assim, o valor 1001 � apresentado como 10.01.
+ 178:../src/lcd_8x2.c **** */
+ 179:../src/lcd_8x2.c **** void LCD_print_frac_int(unsigned int data)
+ 180:../src/lcd_8x2.c **** {
+ 570                             		.loc 1 180 0
+ 571                             		; start of function
+ 572                             		; push 6: r16 r18 r20
+ 573                             		; locals: 18 bytes
+ 574                             		; outgoing: 2 bytes
+ 575                             	.LVL69:
+ 576 027b 61 EF                   		sel	rb2
+ 577 027d C1                      		push	ax ; r16
+ 578                             	.LCFI8:
+ 579 027e C3                      		push	bc ; r18
+ 580                             	.LCFI9:
+ 581 027f C5                      		push	de ; r20
+ 582                             	.LCFI10:
+ 583 0280 61 CF                   		sel	rb0
+ 584 0282 20 14                   		subw	sp, #20
+ 585                             	.LCFI11:
+ 586 0284 A8 1E                   		movw	ax, [sp+30]
+ 587 0286 BD E8                   		movw	r16, ax
+ 588                             	.LVL70:
+ 181:../src/lcd_8x2.c ****   unsigned char aux, space;
+ 182:../src/lcd_8x2.c ****   unsigned int sub = 10000;
+ 589                             		.loc 1 182 0
+ 590 0288 C9 F0 10 27             		movw	r8, #10000
+ 183:../src/lcd_8x2.c ****   aux = 0;
+ 184:../src/lcd_8x2.c ****   space = 1;
+ 591                             		.loc 1 184 0
+ 592 028c E4 F3                   		oneb	r11
+ 185:../src/lcd_8x2.c ****   while (sub)
+ 186:../src/lcd_8x2.c ****   {
+ 187:../src/lcd_8x2.c ****     aux = 0;
+ 188:../src/lcd_8x2.c ****     while (data>=sub)
+ 189:../src/lcd_8x2.c ****     {
+ 190:../src/lcd_8x2.c ****       data -= sub;
+ 191:../src/lcd_8x2.c ****       aux++;
+ 192:../src/lcd_8x2.c ****       space = 0;
+ 193:../src/lcd_8x2.c ****     }
+ 194:../src/lcd_8x2.c ****     if (!space) LCD_write_char(aux+'0');
+ 195:../src/lcd_8x2.c ****     sub /= 10;
+ 593                             		.loc 1 195 0
+ 594 028e 30 0A 00                		movw	ax, #10
+ 595 0291 B8 0C                   		movw	[sp+12], ax
+ 596 0293 F6                      		clrw	ax
+ 597 0294 B8 0E                   		movw	[sp+14], ax
+ 598                             	.LVL71:
+ 599                             	.L63:
+ 188:../src/lcd_8x2.c ****     {
+ 600                             		.loc 1 188 0
+ 601 0296 F4 F2                   		clrb	r10
+ 602 0298 AD E8                   		movw	ax, r16
+ 603 029a 46 F0                   		cmpw	ax, r8
+ 604 029c 61 D8                   		 sknc
+ 605 029e EC 60 03 00             		 br	!!.L89
+ 606                             	.LVL72:
+ 607                             	.L80:
+ 190:../src/lcd_8x2.c ****       aux++;
+ 608                             		.loc 1 190 0
+ 609 02a2 AD E8                   		movw	ax, r16
+ 610 02a4 26 F0                   		subw	ax, r8
+ 611                             	.LVL73:
+ 612 02a6 BD E8                   		movw	r16, ax
+ 613                             	.LVL74:
+ 191:../src/lcd_8x2.c ****       space = 0;
+ 614                             		.loc 1 191 0
+ 615 02a8 A4 F2                   		inc	r10
+ 616                             	.LVL75:
+ 188:../src/lcd_8x2.c ****     {
+ 617                             		.loc 1 188 0
+ 618 02aa 46 F0                   		cmpw	ax, r8
+ 619 02ac 61 C8                   		 skc
+ 620 02ae EC A2 02 00             		 br	!!.L80
+ 621 02b2 8D F2                   		mov	a, r10
+ 622 02b4 0C 30                   		add	a, #48
+ 623 02b6 9D F2                   		mov	r10, a
+ 624                             	.LVL76:
+ 625                             	.L74:
+ 194:../src/lcd_8x2.c ****     sub /= 10;
+ 626                             		.loc 1 194 0 discriminator 1
+ 627 02b8 8D F2                   		mov	a, r10
+ 628 02ba 98 00                   		mov	[sp], a
+ 629 02bc 8D F0                   		mov	a, r8
+ 630 02be 98 0B                   		mov	[sp+11], a
+ 631 02c0 8D F1                   		mov	a, r9
+ 632 02c2 98 0A                   		mov	[sp+10], a
+ 633 02c4 FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 634                             	.LVL77:
+ 635                             		.loc 1 195 0 discriminator 1
+ 636 02c8 88 0B                   		mov	a, [sp+11]
+ 637 02ca 9D F0                   		mov	r8, a
+ 638 02cc 88 0A                   		mov	a, [sp+10]
+ 639 02ce 9D F1                   		mov	r9, a
+ 640 02d0 AD F0                   		movw	ax, r8
+ 641 02d2 BD EA                   		movw	r18, ax
+ 642 02d4 F4 EC                   		clrb	r20
+ 643 02d6 8D EC                   		mov	a, r20
+ 644 02d8 9D ED                   		mov	r21, a
+ 645 02da A8 0C                   		movw	ax, [sp+12]
+ 646 02dc BD F4                   		movw	r12, ax
+ 647 02de A8 0E                   		movw	ax, [sp+14]
+ 648 02e0 BD F6                   		movw	r14, ax
+ 649                             		; G13 udivsi macro r8 = r18 / r12 
+ 650 02e2 51 C0                   		mov	a, #0xC0	; Set DIVMODE=1 and MACMODE=1 
+ 651 02e4 9F E8 00                		mov	!0xf00e8, a	; This preps the peripheral for division without interrupt generation 
+ 652 02e7 AD EC                   		movw	ax, r20		
+ 653 02e9 BE F2                   		movw	0xffff2, ax	; MDAH 
+ 654 02eb AD EA                   		movw	ax, r18		
+ 655 02ed BE F0                   		movw	0xffff0, ax	; MDAL 
+ 656 02ef AD F6                   		movw	ax, r14		
+ 657 02f1 BE F4                   		movw	0xffff4, ax	; MDBH 
+ 658 02f3 AD F4                   		movw	ax, r12		
+ 659 02f5 BE F6                   		movw	0xffff6, ax	; MDBL 
+ 660 02f7 51 C1                   		mov	a, #0xC1	; Set the DIVST bit in MDUC 
+ 661 02f9 9F E8 00                		mov	!0xf00e8, a	; This starts the division op 
+ 662 02fc 8F E8 00                	1:	mov	a, !0xf00e8	; Wait 16 clocks or until DIVST is clear 
+ 663 02ff 31 03 FA                		bt	a.0, $1b	
+ 664 0302 AE F0                   		movw    ax, 0xffff0	; Read the quotient 
+ 665 0304 BD F0                   		movw	r8, ax		
+ 666 0306 AE F2                   		movw    ax, 0xffff2	
+ 667 0308 BD F2                   		movw	r10, ax		
+ 668                             		; end of udivsi macro
+ 196:../src/lcd_8x2.c ****     if (sub==10)
+ 669                             		.loc 1 196 0 discriminator 1
+ 670 030a AD F0                   		movw	ax, r8
+ 671 030c 44 0A 00                		cmpw	ax, #10
+ 672 030f 61 F8                   		 sknz
+ 673 0311 EC 46 03 00             		 br	!!.L67
+ 674                             		.loc 1 196 0 is_stmt 0
+ 675 0315 8D ED                   		mov	a, r21
+ 676 0317 9D F3                   		mov	r11, a
+ 677                             	.L68:
+ 678                             	.LVL78:
+ 185:../src/lcd_8x2.c ****   {
+ 679                             		.loc 1 185 0 is_stmt 1
+ 680 0319 AD F0                   		movw	ax, r8
+ 681 031b 44 00 00                		cmpw	ax, #0
+ 682 031e 61 E8                   		 skz
+ 683 0320 EC 96 02 00             		 br	!!.L63
+ 197:../src/lcd_8x2.c ****     {
+ 198:../src/lcd_8x2.c ****       if (space) LCD_write_char('0');
+ 199:../src/lcd_8x2.c ****       LCD_write_char('.');
+ 200:../src/lcd_8x2.c ****       space = 0;
+ 201:../src/lcd_8x2.c ****     }
+ 202:../src/lcd_8x2.c ****   }
+ 203:../src/lcd_8x2.c ****   if (space) LCD_write_char('0');
+ 684                             		.loc 1 203 0
+ 685 0324 D4 F3                   		cmp0	r11
+ 686 0326 61 F8                   		 sknz
+ 687 0328 EC 34 03 00             		 br	!!.L62
+ 688                             		.loc 1 203 0 is_stmt 0 discriminator 1
+ 689 032c 51 30                   		mov	a, #48
+ 690 032e 98 00                   		mov	[sp], a
+ 691 0330 FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 692                             	.LVL79:
+ 693                             	.L62:
+ 204:../src/lcd_8x2.c **** }
+ 694                             		.loc 1 204 0 is_stmt 1
+ 695 0334 10 14                   		addw	sp, #20
+ 696 0336 61 EF                   		sel	rb2
+ 697 0338 C4                      		pop	de ; r20
+ 698 0339 C2                      		pop	bc ; r18
+ 699 033a C0                      		pop	ax ; r16
+ 700                             	.LVL80:
+ 701 033b 61 CF                   		sel	rb0
+ 702 033d D7                      		ret
+ 703                             	.LVL81:
+ 704                             	.L75:
+ 198:../src/lcd_8x2.c ****       LCD_write_char('.');
+ 705                             		.loc 1 198 0 discriminator 1
+ 706 033e 51 30                   		mov	a, #48
+ 707 0340 98 00                   		mov	[sp], a
+ 708 0342 FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 709                             	.LVL82:
+ 710                             	.L67:
+ 199:../src/lcd_8x2.c ****       space = 0;
+ 711                             		.loc 1 199 0
+ 712 0346 51 2E                   		mov	a, #46
+ 713 0348 98 00                   		mov	[sp], a
+ 714 034a FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 715                             	.LVL83:
+ 716 034e C9 F0 0A 00             		movw	r8, #10
+ 200:../src/lcd_8x2.c ****     }
+ 717                             		.loc 1 200 0
+ 718 0352 F4 F3                   		clrb	r11
+ 719                             	.LVL84:
+ 188:../src/lcd_8x2.c ****     {
+ 720                             		.loc 1 188 0
+ 721 0354 F4 F2                   		clrb	r10
+ 722 0356 AD E8                   		movw	ax, r16
+ 723 0358 46 F0                   		cmpw	ax, r8
+ 724 035a 61 C8                   		 skc
+ 725 035c EC A2 02 00             		 br	!!.L80
+ 726                             	.LVL85:
+ 727                             	.L89:
+ 194:../src/lcd_8x2.c ****     sub /= 10;
+ 728                             		.loc 1 194 0
+ 729 0360 D4 F3                   		cmp0	r11
+ 730 0362 61 F8                   		 sknz
+ 731 0364 EC C5 03 00             		 br	!!.L90
+ 195:../src/lcd_8x2.c ****     if (sub==10)
+ 732                             		.loc 1 195 0
+ 733 0368 AD F0                   		movw	ax, r8
+ 734                             	.LVL86:
+ 735 036a B8 10                   		movw	[sp+16], ax
+ 736 036c 8D F2                   		mov	a, r10
+ 737 036e 98 12                   		mov	[sp+18], a
+ 738 0370 98 13                   		mov	[sp+19], a
+ 739 0372 A8 10                   		movw	ax, [sp+16]
+ 740 0374 BD F4                   		movw	r12, ax
+ 741 0376 A8 12                   		movw	ax, [sp+18]
+ 742 0378 BD F6                   		movw	r14, ax
+ 743 037a A8 0C                   		movw	ax, [sp+12]
+ 744 037c BD F0                   		movw	r8, ax
+ 745                             	.LVL87:
+ 746 037e A8 0E                   		movw	ax, [sp+14]
+ 747 0380 BD F2                   		movw	r10, ax
+ 748                             		; G13 udivsi macro r12 = r12 / r8 
+ 749 0382 51 C0                   		mov	a, #0xC0	; Set DIVMODE=1 and MACMODE=1 
+ 750 0384 9F E8 00                		mov	!0xf00e8, a	; This preps the peripheral for division without interrupt generation 
+ 751 0387 AD F6                   		movw	ax, r14		
+ 752 0389 BE F2                   		movw	0xffff2, ax	; MDAH 
+ 753 038b AD F4                   		movw	ax, r12		
+ 754 038d BE F0                   		movw	0xffff0, ax	; MDAL 
+ 755 038f AD F2                   		movw	ax, r10		
+ 756 0391 BE F4                   		movw	0xffff4, ax	; MDBH 
+ 757 0393 AD F0                   		movw	ax, r8		
+ 758 0395 BE F6                   		movw	0xffff6, ax	; MDBL 
+ 759 0397 51 C1                   		mov	a, #0xC1	; Set the DIVST bit in MDUC 
+ 760 0399 9F E8 00                		mov	!0xf00e8, a	; This starts the division op 
+ 761 039c 8F E8 00                	1:	mov	a, !0xf00e8	; Wait 16 clocks or until DIVST is clear 
+ 762 039f 31 03 FA                		bt	a.0, $1b	
+ 763 03a2 AE F0                   		movw    ax, 0xffff0	; Read the quotient 
+ 764 03a4 BD F4                   		movw	r12, ax		
+ 765 03a6 AE F2                   		movw    ax, 0xffff2	
+ 766 03a8 BD F6                   		movw	r14, ax		
+ 767                             		; end of udivsi macro
+ 768                             	.LVL88:
+ 769 03aa AD F4                   		movw	ax, r12
+ 770 03ac B8 06                   		movw	[sp+6], ax
+ 771 03ae AD F6                   		movw	ax, r14
+ 772 03b0 B8 08                   		movw	[sp+8], ax
+ 773 03b2 AD F4                   		movw	ax, r12
+ 774 03b4 BD F0                   		movw	r8, ax
+ 775                             	.LVL89:
+ 196:../src/lcd_8x2.c ****     {
+ 776                             		.loc 1 196 0
+ 777 03b6 44 0A 00                		cmpw	ax, #10
+ 778 03b9 61 F8                   		 sknz
+ 779 03bb EC 3E 03 00             		 br	!!.L75
+ 780                             	.LVL90:
+ 781 03bf E4 F3                   		oneb	r11
+ 782 03c1 EC 19 03 00             		br	!!.L68
+ 783                             	.LVL91:
+ 784                             	.L90:
+ 785 03c5 CD F2 30                		mov	r10, #48
+ 786 03c8 EC B8 02 00             		br	!!.L74
+ 787                             	.LFE7:
+ 789                             		.global	_LCD_print_char
+ 791                             	_LCD_print_char:
+ 792                             	.LFB8:
+ 205:../src/lcd_8x2.c **** 
+ 206:../src/lcd_8x2.c **** void LCD_print_char(unsigned char data)
+ 207:../src/lcd_8x2.c **** {
+ 793                             		.loc 1 207 0
+ 794                             		; start of function
+ 795                             		; push 6: r16 r18 r20
+ 796                             		; locals: 18 bytes
+ 797                             		; outgoing: 2 bytes
+ 798                             	.LVL92:
+ 799 03cc 61 EF                   		sel	rb2
+ 800 03ce C1                      		push	ax ; r16
+ 801                             	.LCFI12:
+ 802 03cf C3                      		push	bc ; r18
+ 803                             	.LCFI13:
+ 804 03d0 C5                      		push	de ; r20
+ 805                             	.LCFI14:
+ 806 03d1 61 CF                   		sel	rb0
+ 807 03d3 20 14                   		subw	sp, #20
+ 808                             	.LCFI15:
+ 809 03d5 88 1E                   		mov	a, [sp+30]
+ 810 03d7 9D E8                   		mov	r16, a
+ 811                             	.LVL93:
+ 208:../src/lcd_8x2.c ****   unsigned char aux, space;
+ 209:../src/lcd_8x2.c ****   unsigned char sub = 100;
+ 210:../src/lcd_8x2.c ****   aux = 0;
+ 211:../src/lcd_8x2.c ****   space = 1;
+ 212:../src/lcd_8x2.c ****   while (sub)
+ 213:../src/lcd_8x2.c ****   {
+ 214:../src/lcd_8x2.c ****     aux = 0;
+ 215:../src/lcd_8x2.c ****     while (data>=sub)
+ 216:../src/lcd_8x2.c ****     {
+ 217:../src/lcd_8x2.c ****       data -= sub;
+ 218:../src/lcd_8x2.c ****       aux++;
+ 219:../src/lcd_8x2.c ****       space = 0;
+ 220:../src/lcd_8x2.c ****     }
+ 221:../src/lcd_8x2.c ****     if (!space) LCD_write_char(aux+'0');
+ 812                             		.loc 1 221 0
+ 813 03d9 C9 EC 03 00             		movw	r20, #3
+ 209:../src/lcd_8x2.c ****   aux = 0;
+ 814                             		.loc 1 209 0
+ 815 03dd CD EA 64                		mov	r18, #100
+ 211:../src/lcd_8x2.c ****   while (sub)
+ 816                             		.loc 1 211 0
+ 817 03e0 E4 E9                   		oneb	r17
+ 222:../src/lcd_8x2.c ****     sub /= 10;
+ 818                             		.loc 1 222 0
+ 819 03e2 30 0A 00                		movw	ax, #10
+ 820 03e5 B8 0C                   		movw	[sp+12], ax
+ 821 03e7 F6                      		clrw	ax
+ 822 03e8 B8 0E                   		movw	[sp+14], ax
+ 823 03ea 8D E9                   		mov	a, r17
+ 824 03ec 98 03                   		mov	[sp+3], a
+ 825 03ee 8D E8                   		mov	a, r16
+ 826 03f0 98 02                   		mov	[sp+2], a
+ 827                             	.LVL94:
+ 828                             	.L92:
+ 215:../src/lcd_8x2.c ****     {
+ 829                             		.loc 1 215 0
+ 830 03f2 F4 F1                   		clrb	r9
+ 831 03f4 88 02                   		mov	a, [sp+2]
+ 832 03f6 4B EA                   		cmp	a, r18
+ 833 03f8 61 D8                   		 sknc
+ 834 03fa EC AB 04 00             		 br	!!.L111
+ 835 03fe 88 02                   		mov	a, [sp+2]
+ 836 0400 9D E8                   		mov	r16, a
+ 837                             	.LVL95:
+ 838                             	.L104:
+ 217:../src/lcd_8x2.c ****       aux++;
+ 839                             		.loc 1 217 0
+ 840 0402 8D EA                   		mov	a, r18
+ 841                             	.LVL96:
+ 842 0404 76                      		mov	l, a
+ 843 0405 8D E8                   		mov	a, r16
+ 844 0407 61 2E                   		sub	a, l
+ 845 0409 9D E8                   		mov	r16, a
+ 846                             	.LVL97:
+ 218:../src/lcd_8x2.c ****       space = 0;
+ 847                             		.loc 1 218 0
+ 848 040b A4 F1                   		inc	r9
+ 849                             	.LVL98:
+ 215:../src/lcd_8x2.c ****     {
+ 850                             		.loc 1 215 0
+ 851 040d 4B EA                   		cmp	a, r18
+ 852 040f 61 C8                   		 skc
+ 853 0411 EC 02 04 00             		 br	!!.L104
+ 854                             	.LVL99:
+ 855 0415 98 02                   		mov	[sp+2], a
+ 856 0417 8D F1                   		mov	a, r9
+ 857                             	.LVL100:
+ 858 0419 0C 30                   		add	a, #48
+ 859 041b 9D F1                   		mov	r9, a
+ 860                             	.LVL101:
+ 861                             	.L100:
+ 221:../src/lcd_8x2.c ****     sub /= 10;
+ 862                             		.loc 1 221 0 discriminator 1
+ 863 041d 8D F1                   		mov	a, r9
+ 864 041f 98 00                   		mov	[sp], a
+ 865 0421 8D F4                   		mov	a, r12
+ 866 0423 98 0B                   		mov	[sp+11], a
+ 867 0425 8D F5                   		mov	a, r13
+ 868 0427 98 0A                   		mov	[sp+10], a
+ 869 0429 8D F6                   		mov	a, r14
+ 870 042b 98 09                   		mov	[sp+9], a
+ 871 042d 8D F7                   		mov	a, r15
+ 872 042f 98 08                   		mov	[sp+8], a
+ 873 0431 FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 874                             	.LVL102:
+ 875 0435 F1                      		clrb	a
+ 876 0436 98 03                   		mov	[sp+3], a
+ 877                             	.L95:
+ 878                             		.loc 1 222 0
+ 879 0438 8D EA                   		mov	a, r18
+ 880 043a 9D F4                   		mov	r12, a
+ 881 043c F4 F5                   		clrb	r13
+ 882 043e 8D F5                   		mov	a, r13
+ 883 0440 9D F6                   		mov	r14, a
+ 884 0442 9D F7                   		mov	r15, a
+ 885 0444 A8 0C                   		movw	ax, [sp+12]
+ 886 0446 BD F0                   		movw	r8, ax
+ 887 0448 A8 0E                   		movw	ax, [sp+14]
+ 888 044a BD F2                   		movw	r10, ax
+ 889                             		; G13 udivsi macro r8 = r12 / r8 
+ 890 044c 51 C0                   		mov	a, #0xC0	; Set DIVMODE=1 and MACMODE=1 
+ 891 044e 9F E8 00                		mov	!0xf00e8, a	; This preps the peripheral for division without interrupt generation 
+ 892 0451 AD F6                   		movw	ax, r14		
+ 893 0453 BE F2                   		movw	0xffff2, ax	; MDAH 
+ 894 0455 AD F4                   		movw	ax, r12		
+ 895 0457 BE F0                   		movw	0xffff0, ax	; MDAL 
+ 896 0459 AD F2                   		movw	ax, r10		
+ 897 045b BE F4                   		movw	0xffff4, ax	; MDBH 
+ 898 045d AD F0                   		movw	ax, r8		
+ 899 045f BE F6                   		movw	0xffff6, ax	; MDBL 
+ 900 0461 51 C1                   		mov	a, #0xC1	; Set the DIVST bit in MDUC 
+ 901 0463 9F E8 00                		mov	!0xf00e8, a	; This starts the division op 
+ 902 0466 8F E8 00                	1:	mov	a, !0xf00e8	; Wait 16 clocks or until DIVST is clear 
+ 903 0469 31 03 FA                		bt	a.0, $1b	
+ 904 046c AE F0                   		movw    ax, 0xffff0	; Read the quotient 
+ 905 046e BD F0                   		movw	r8, ax		
+ 906 0470 AE F2                   		movw    ax, 0xffff2	
+ 907 0472 BD F2                   		movw	r10, ax		
+ 908                             		; end of udivsi macro
+ 909 0474 AD F0                   		movw	ax, r8
+ 910 0476 B8 04                   		movw	[sp+4], ax
+ 911 0478 AD F2                   		movw	ax, r10
+ 912 047a B8 06                   		movw	[sp+6], ax
+ 913 047c 8D F0                   		mov	a, r8
+ 914 047e 9D EA                   		mov	r18, a
+ 915                             	.LVL103:
+ 916 0480 B6 EC                   		decw	r20
+ 212:../src/lcd_8x2.c ****   {
+ 917                             		.loc 1 212 0
+ 918 0482 AD EC                   		movw	ax, r20
+ 919 0484 44 00 00                		cmpw	ax, #0
+ 920 0487 61 E8                   		 skz
+ 921 0489 EC F2 03 00             		 br	!!.L92
+ 922 048d 88 03                   		mov	a, [sp+3]
+ 923 048f 9D E9                   		mov	r17, a
+ 223:../src/lcd_8x2.c ****   }
+ 224:../src/lcd_8x2.c ****   if (space) LCD_write_char('0');
+ 924                             		.loc 1 224 0
+ 925 0491 D4 E9                   		cmp0	r17
+ 926 0493 61 F8                   		 sknz
+ 927 0495 EC A1 04 00             		 br	!!.L91
+ 928                             		.loc 1 224 0 is_stmt 0 discriminator 1
+ 929 0499 51 30                   		mov	a, #48
+ 930 049b 98 00                   		mov	[sp], a
+ 931 049d FC 00 00 00             		call	!!%code(_LCD_write_char)
+ 932                             	.LVL104:
+ 933                             	.L91:
+ 225:../src/lcd_8x2.c **** }
+ 934                             		.loc 1 225 0 is_stmt 1
+ 935 04a1 10 14                   		addw	sp, #20
+ 936 04a3 61 EF                   		sel	rb2
+ 937 04a5 C4                      		pop	de ; r20
+ 938 04a6 C2                      		pop	bc ; r18
+ 939 04a7 C0                      		pop	ax ; r16
+ 940 04a8 61 CF                   		sel	rb0
+ 941 04aa D7                      		ret
+ 942                             	.LVL105:
+ 943                             	.L111:
+ 221:../src/lcd_8x2.c ****     sub /= 10;
+ 944                             		.loc 1 221 0
+ 945 04ab 88 03                   		mov	a, [sp+3]
+ 946                             	.LVL106:
+ 947 04ad D1                      		cmp0	a
+ 948 04ae 61 F8                   		 sknz
+ 949 04b0 EC BB 04 00             		 br	!!.L112
+ 950                             	.LVL107:
+ 951 04b4 E1                      		oneb	a
+ 952 04b5 98 03                   		mov	[sp+3], a
+ 953 04b7 EC 38 04 00             		br	!!.L95
+ 954                             	.LVL108:
+ 955                             	.L112:
+ 956 04bb CD F1 30                		mov	r9, #48
+ 957 04be EC 1D 04 00             		br	!!.L100
+ 958                             	.LFE8:
+ 1114                             	.Letext0:
+ 1115                             		.file 2 "../src/iodefine.h"
